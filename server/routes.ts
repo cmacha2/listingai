@@ -3393,25 +3393,67 @@ Make each section professional, engaging, and appropriate for e-commerce. Use br
     try {
       const userId = req.session.userId!;
       const accessToken = await ebayOAuth.ensureValidToken(userId);
-      
+
       if (!accessToken) {
         return res.status(401).json({ message: "eBay authentication required" });
       }
 
       const { categoryId } = req.params;
       const { marketplaceId = 'EBAY_US' } = req.query;
-      
+
+      // First, check if this is a leaf category
+      try {
+        const isLeaf = await ebayOAuth.isLeafCategory(accessToken, categoryId, marketplaceId as string);
+
+        if (!isLeaf) {
+          console.log(`⚠️ Category ${categoryId} is not a leaf category, finding child leaf...`);
+
+          // Try to get child categories
+          const categoryDetails = await ebayOAuth.getCategoryDetails(accessToken, categoryId, marketplaceId as string);
+
+          if (categoryDetails.categorySubtree?.childCategoryTreeNodes && categoryDetails.categorySubtree.childCategoryTreeNodes.length > 0) {
+            // Return the parent category info with suggestion to use a child
+            return res.status(400).json({
+              message: "This is not a leaf category. Please select a more specific subcategory.",
+              isLeaf: false,
+              categoryId: categoryId,
+              categoryName: categoryDetails.category?.categoryName || 'Unknown',
+              childCategories: categoryDetails.categorySubtree.childCategoryTreeNodes.map((child: any) => ({
+                categoryId: child.category.categoryId,
+                categoryName: child.category.categoryName
+              })).slice(0, 10) // Return first 10 children
+            });
+          }
+        }
+      } catch (leafCheckError) {
+        console.warn(`⚠️ Could not verify if ${categoryId} is leaf, attempting to get aspects anyway`);
+      }
+
+      // Try to get aspects
       const aspects = await ebayOAuth.getCategoryAspects(
-        accessToken, 
+        accessToken,
         categoryId,
         marketplaceId as string
       );
-      
+
       res.json(aspects);
     } catch (error: any) {
       console.error("eBay category aspects error:", error);
-      res.status(500).json({ 
-        message: error.message || "Failed to get eBay category aspects" 
+
+      // Enhanced error response
+      const errorMessage = error.response?.data?.errors?.[0]?.message || error.message;
+
+      if (errorMessage.includes('must be a leaf category')) {
+        return res.status(400).json({
+          message: "This category cannot be used for listings. Please select a more specific subcategory.",
+          isLeaf: false,
+          categoryId: req.params.categoryId,
+          error: errorMessage
+        });
+      }
+
+      res.status(500).json({
+        message: errorMessage || "Failed to get eBay category aspects"
       });
     }
   });

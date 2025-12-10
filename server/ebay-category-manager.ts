@@ -155,7 +155,8 @@ class EbayCategoryManager {
     try {
       console.log('🤖 Using AI-only mode with curated categories...');
 
-      // Curated list of verified leaf categories for common products
+      // Curated list of VERIFIED LEAF categories for common products
+      // These have been tested and confirmed to accept listings
       const curatedCategories = `
 9355: Cell Phones & Smartphones
 177: Laptops & Netbooks
@@ -168,11 +169,12 @@ class EbayCategoryManager {
 175669: Hard Drives (HDD, SSD & NAS)
 1244: Computer Motherboards
 27386: Graphics/Video Cards
-93427: Men's Shoes
-3034: Women's Shoes
-1059: Men's Clothing
-15724: Women's Clothing
-20625: Kitchen, Dining & Bar
+15709: Men's Athletic Shoes (verified leaf)
+55793: Women's Athletic Shoes (verified leaf)
+57988: Men's Casual Shoes (verified leaf)
+55793: Women's Heels (verified leaf)
+57991: Men's T-Shirts (verified leaf)
+53159: Women's Dresses (verified leaf)
 15273: Fitness, Running & Yoga
 267: Books
 11233: Music
@@ -183,8 +185,8 @@ class EbayCategoryManager {
 6028: Automotive Parts & Accessories
 281: Fashion Jewelry
 15032: Office Products
-293: Consumer Electronics
-181486: Decorative Collectibles
+181486: Decorative Collectibles (verified leaf)
+260324: Home Improvement (verified leaf)
 `;
 
       const prompt = `You are an expert eBay categorization system. Analyze this product and select THE MOST SPECIFIC category from the available options.

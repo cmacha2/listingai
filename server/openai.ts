@@ -1409,20 +1409,22 @@ function getSmartDefault(aspectName: string, allowedValues: any[], productData: 
 function getFallbackDefault(aspectName: string, productData: any): string {
   const aspectLower = aspectName.toLowerCase();
   const productName = productData.productName?.toLowerCase() || '';
-  
+  const description = productData.description?.toLowerCase() || '';
+  const combinedText = `${productName} ${description}`;
+
   if (aspectLower.includes('brand')) {
     return productData.brand || 'Generic';
   }
-  
+
   if (aspectLower.includes('condition')) {
     return 'New';
   }
-  
+
   if (aspectLower.includes('color')) {
-    // Try to extract color from product name
-    const colors = ['black', 'white', 'blue', 'red', 'green', 'yellow', 'pink', 'purple', 'gray', 'silver', 'gold'];
+    // Try to extract color from product name and description
+    const colors = ['black', 'white', 'blue', 'red', 'green', 'yellow', 'pink', 'purple', 'gray', 'grey', 'silver', 'gold', 'brown', 'beige', 'tan'];
     for (const color of colors) {
-      if (productName.includes(color)) {
+      if (combinedText.includes(color)) {
         return color.charAt(0).toUpperCase() + color.slice(1);
       }
     }
@@ -1456,8 +1458,88 @@ function getFallbackDefault(aspectName: string, productData: any): string {
   if (aspectLower.includes('cellular') || aspectLower.includes('band')) {
     return '5G';
   }
-  
-  return 'Not Specified';
+
+  // Model handling - critical for many categories
+  if (aspectLower.includes('model')) {
+    // Try to extract model from product name
+    const brand = productData.brand || '';
+
+    // Remove brand from product name to get potential model
+    let potentialModel = productName;
+    if (brand && productName.includes(brand.toLowerCase())) {
+      potentialModel = productName.replace(brand.toLowerCase(), '').trim();
+    }
+
+    // Extract the first few meaningful words as model
+    const words = potentialModel.split(/\s+/).filter(w =>
+      w.length > 1 &&
+      !['the', 'and', 'for', 'with', 'size', 'color'].includes(w.toLowerCase())
+    );
+
+    if (words.length > 0) {
+      // Take first 2-3 words as model, limit to 65 characters
+      const modelName = words.slice(0, 3).join(' ');
+      return modelName.length > 65 ? modelName.substring(0, 65) : modelName;
+    }
+
+    // If still no model found, use brand + generic identifier
+    if (brand) {
+      return `${brand} Standard`;
+    }
+
+    // Last resort - use a generic but valid model
+    return 'Standard Model';
+  }
+
+  // For any other aspect, try to extract from product name or use a meaningful default
+  if (aspectLower.includes('type')) {
+    // Extract type from product name and description
+    const types = ['sandals', 'shoes', 'boots', 'sneakers', 'slippers', 'loafers', 'heels', 'flats', 'oxfords', 'moccasins'];
+    for (const type of types) {
+      if (combinedText.includes(type)) {
+        return type.charAt(0).toUpperCase() + type.slice(1);
+      }
+    }
+  }
+
+  if (aspectLower.includes('style')) {
+    // Common style options
+    const styles = ['casual', 'formal', 'athletic', 'classic', 'modern', 'vintage', 'sporty', 'elegant', 'minimalist'];
+    for (const style of styles) {
+      if (combinedText.includes(style)) {
+        return style.charAt(0).toUpperCase() + style.slice(1);
+      }
+    }
+    return 'Casual';
+  }
+
+  if (aspectLower.includes('material') || aspectLower.includes('shell')) {
+    // Material options
+    const materials = ['leather', 'suede', 'canvas', 'synthetic', 'rubber', 'textile', 'fabric', 'mesh', 'nylon', 'polyester', 'cotton'];
+    for (const material of materials) {
+      if (combinedText.includes(material)) {
+        return material.charAt(0).toUpperCase() + material.slice(1);
+      }
+    }
+    return 'Synthetic';
+  }
+
+  if (aspectLower.includes('department')) {
+    // Try to determine department from product name and description
+    if (combinedText.includes('men') || combinedText.includes('man')) return 'Men';
+    if (combinedText.includes('women') || combinedText.includes('woman')) return 'Women';
+    if (combinedText.includes('kid') || combinedText.includes('child')) return 'Kids';
+    if (combinedText.includes('unisex')) return 'Unisex';
+    return 'Men'; // Default
+  }
+
+  if (aspectLower.includes('size type')) {
+    return 'Regular';
+  }
+
+  // If we still don't have a good default, use a generic but non-empty value
+  // NEVER return "Not Specified" for required fields
+  return 'Standard';
 }
 
 export async function generateProductAspects(
@@ -1520,32 +1602,43 @@ CRITICAL RULES:
 3. **Allowed values**: If "Allowed values" are listed, ONLY use those exact values
 4. **Product-specific logic**:
    - Electronics: Focus on technical specs (storage, RAM, connectivity)
-   - Clothing: Focus on size, color, material, brand
+   - Clothing/Footwear: Focus on size, color, material, brand, style, department
    - Books: Focus on format, language, publication details
    - Automotive: Focus on make, model, year, compatibility
    - Home & Garden: Focus on dimensions, material, color, brand
 
-5. **Smart defaults based on product type**:
-   - Phones: Brand from name, storage from specs, "Unlocked" for network
-   - Laptops: Brand, RAM, storage, processor from specs
+5. **CRITICAL - Model field**:
+   - Model is REQUIRED for most categories and CANNOT be empty
+   - Extract model from product name (e.g., "Nike Air Max 270" → "Air Max 270")
+   - For shoes: Extract style name (e.g., "Kino Leather Sandals" → "Leather Sandals")
+   - For generic products: Use descriptive model like "Classic Leather", "Premium Edition"
+   - NEVER use "Not Specified" or leave Model empty - always provide a meaningful value
+
+6. **Smart defaults based on product type**:
+   - Phones: Brand from name, Model from specs, storage from specs, "Unlocked" for network
+   - Laptops: Brand, Model, RAM, storage, processor from specs
+   - Footwear: Brand, Model (style name), Size, Color, Material, Type, Department
    - Clothing: Size "Medium", Color from description, Material "Cotton" if unknown
    - Books: Format "Paperback", Language "English", Condition "New"
 
-6. **Value formatting**:
+7. **Value formatting**:
    - Storage: "64 GB", "128 GB", "256 GB", "512 GB", "1 TB"
    - RAM: "4 GB", "8 GB", "16 GB", "32 GB"
    - Screen Size: "6.1 in", "13.3 in", "15.6 in"
    - Charging Range: "1-10", "5-15", "10-25"
 
-7. **Extract from product name/description**:
+8. **Extract from product name/description**:
    - Look for numbers + units (GB, TB, MP, in, etc.)
    - Look for colors (Black, White, Blue, Red, etc.)
-   - Look for brands (Apple, Samsung, Nike, etc.)
-   - Look for models (iPhone 12, Galaxy S21, etc.)
+   - Look for brands (Apple, Samsung, Nike, Kino, etc.)
+   - Look for models (iPhone 12, Galaxy S21, Air Max, Leather Sandals, etc.)
 
-8. **Avoid generic values**: Instead of "Not Specified", use reasonable defaults
+9. **CRITICAL - Avoid generic values**:
+   - NEVER use "Not Specified" for REQUIRED fields
+   - Always provide meaningful, product-specific values
+   - Use reasonable defaults that make sense for the product type
 
-9. **CRITICAL LENGTH LIMIT**: Each aspect value must be 65 characters or less
+10. **CRITICAL LENGTH LIMIT**: Each aspect value must be 65 characters or less
    - "Intel Core i5 Processor" → "Intel Core i5"
    - "Intel Core i5 Processor, DVD-RW Drive, USB Ports" → "Intel Core i5"
    - Keep values concise and specific
@@ -1699,6 +1792,32 @@ Your response must start with { and end with } - nothing else.
           // Generate a reasonable default based on aspect name and product type
           const fallbackDefault = getFallbackDefault(aspectName, productData);
           validatedAspects[aspectName] = [fallbackDefault];
+        }
+      }
+    });
+
+    // CRITICAL FINAL VALIDATION: Ensure no required field has empty or "Not Specified" values
+    requiredAspects.forEach(aspect => {
+      if (aspect.aspectConstraint.aspectRequired) {
+        const aspectName = aspect.localizedAspectName;
+        const values = validatedAspects[aspectName];
+
+        // Check if value is missing, empty, or "Not Specified"
+        if (!values || values.length === 0 ||
+            values[0] === '' || values[0] === 'Not Specified' ||
+            values[0] === null || values[0] === undefined) {
+
+          console.warn(`⚠️ CRITICAL: Required aspect "${aspectName}" has invalid value, generating fallback`);
+
+          // Generate a better fallback
+          if (aspect.aspectConstraint.aspectValues && aspect.aspectConstraint.aspectValues.length > 0) {
+            validatedAspects[aspectName] = [aspect.aspectConstraint.aspectValues[0].localizedValue];
+            console.log(`✅ Using first allowed value: ${validatedAspects[aspectName][0]}`);
+          } else {
+            const fallback = getFallbackDefault(aspectName, productData);
+            validatedAspects[aspectName] = [fallback];
+            console.log(`✅ Using intelligent fallback: ${fallback}`);
+          }
         }
       }
     });

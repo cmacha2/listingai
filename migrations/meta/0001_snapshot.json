@@ -1,0 +1,619 @@
+{
+  "id": "91e6d591-3fdb-4006-b246-c7456eb8a2f1",
+  "prevId": "3dc99aa8-b41a-41af-b9d7-337cccd0634f",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.customization_settings": {
+      "name": "customization_settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "store_assets": {
+          "name": "store_assets",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "store_policies": {
+          "name": "store_policies",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description_settings": {
+          "name": "description_settings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "footer_settings": {
+          "name": "footer_settings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "customization_settings_user_id_unique": {
+          "name": "customization_settings_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ebay_settings": {
+      "name": "ebay_settings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fulfillment_policy_id": {
+          "name": "fulfillment_policy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_policy_id": {
+          "name": "payment_policy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_policy_id": {
+          "name": "return_policy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "merchant_location_key": {
+          "name": "merchant_location_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_category_id": {
+          "name": "default_category_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_condition": {
+          "name": "default_condition",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'NEW'"
+        },
+        "default_vat_percentage": {
+          "name": "default_vat_percentage",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_apply_tax": {
+          "name": "default_apply_tax",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "default_third_party_tax_category": {
+          "name": "default_third_party_tax_category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "ebay_settings_user_id_unique": {
+          "name": "ebay_settings_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.listings": {
+      "name": "listings",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_name": {
+          "name": "product_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "features": {
+          "name": "features",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tone": {
+          "name": "tone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sku": {
+          "name": "sku",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "condition": {
+          "name": "condition",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'NEW'"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "image_urls": {
+          "name": "image_urls",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "product_aspects": {
+          "name": "product_aspects",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "marketplace_id": {
+          "name": "marketplace_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'EBAY_US'"
+        },
+        "format": {
+          "name": "format",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'FIXED_PRICE'"
+        },
+        "listing_description": {
+          "name": "listing_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantity_limit_per_buyer": {
+          "name": "quantity_limit_per_buyer",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category_name": {
+          "name": "category_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "merchant_location_key": {
+          "name": "merchant_location_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fulfillment_policy_id": {
+          "name": "fulfillment_policy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_policy_id": {
+          "name": "payment_policy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "return_policy_id": {
+          "name": "return_policy_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vat_percentage": {
+          "name": "vat_percentage",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "apply_tax": {
+          "name": "apply_tax",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "third_party_tax_category": {
+          "name": "third_party_tax_category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "generated_title": {
+          "name": "generated_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "generated_description": {
+          "name": "generated_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seo_score": {
+          "name": "seo_score",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "seo_analysis": {
+          "name": "seo_analysis",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_item_id": {
+          "name": "ebay_item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_offer_id": {
+          "name": "ebay_offer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_sku": {
+          "name": "ebay_sku",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_listing_id": {
+          "name": "ebay_listing_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_url": {
+          "name": "ebay_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_fees": {
+          "name": "ebay_fees",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_warnings": {
+          "name": "ebay_warnings",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "views": {
+          "name": "views",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "watchers": {
+          "name": "watchers",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "questions": {
+          "name": "questions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "ebay_status": {
+          "name": "ebay_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "publish_to_ebay": {
+          "name": "publish_to_ebay",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "published_at": {
+          "name": "published_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_synced_at": {
+          "name": "last_synced_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_ebay_connected": {
+          "name": "is_ebay_connected",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "ebay_access_token": {
+          "name": "ebay_access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_refresh_token": {
+          "name": "ebay_refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_token_expiry": {
+          "name": "ebay_token_expiry",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_user_id": {
+          "name": "ebay_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_user_name": {
+          "name": "ebay_user_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selected_marketplace": {
+          "name": "selected_marketplace",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_marketplace_country": {
+          "name": "ebay_marketplace_country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ebay_marketplace_name": {
+          "name": "ebay_marketplace_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "oauth_state": {
+          "name": "oauth_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "brand_settings": {
+          "name": "brand_settings",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

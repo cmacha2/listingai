@@ -1,0 +1,120 @@
+Create a fully functional MVP of a SaaS platform designed for eBay sellers who want to publish listings faster and more professionally by using AI-generated SEO titles and descriptions. The tool will simplify the listing workflow and allow publication directly to their eBay account.
+
+🖥 FRONTEND – UI/UX REQUIREMENTS
+Create a clean, focused and modern interface, inspired by SaaS tools for eCommerce and automation like AutoDS, Shopify App dashboards, or Notion AI generators.
+
+✨ Design Requirements:
+Responsive, clean layout
+
+Sidebar or top navbar with navigation
+
+Soft shadows, rounded corners, and card-style input blocks
+
+Use 3–4 accent colors max (preferably modern blues or eCommerce tones)
+
+📑 Pages / Views Needed:
+Landing Page
+
+Headline: "List Smarter on eBay with AI"
+
+Subtext: “Generate titles and descriptions. Publish listings. Save time.”
+
+CTA button: “Start Free”
+
+Optional: a comparison chart or “How it works” section
+
+Login / Signup Page
+
+Email/password option
+
+Optionally use Google OAuth
+
+Clean and distraction-free layout
+
+Dashboard / Main Panel
+
+Welcome header with user's name
+
+Button: “Connect eBay Account”
+
+Section to “Add a Product” with:
+
+Product Name
+
+Optional image upload
+
+Price field
+
+Dropdown for Category
+
+Features/Benefits input
+
+Tone dropdown (e.g. professional, friendly)
+
+“Generate with AI” button
+
+Section to preview AI output:
+
+Title: auto-filled
+
+Description: rich text preview
+
+Publish button (calls backend)
+
+Logs area (success or errors)
+
+Published Listings View
+
+Table of listings created
+
+Columns: Title, Date, eBay ID (optional), Status
+
+Settings / Account
+
+Change email, password
+
+Disconnect eBay
+
+⚙️ BACKEND – FUNCTIONAL REQUIREMENTS
+Build a backend service that:
+
+Accepts product data from the frontend
+
+Sends that data to an LLM API (local or remote)
+
+Returns a generated title + description
+
+Publishes the listing via eBay’s API (use OAuth2 flow)
+
+Saves listing metadata to a database (or simple JSON file for MVP)
+
+Stores user sessions securely
+
+Offers a small endpoint to list previous submissions
+
+🤖 AI INTEGRATION (LLM)
+The system must call a local or self-hosted AI language model to:
+
+Generate an SEO-optimized title (max 80 characters)
+
+Generate a persuasive product description
+
+Prompt should include: product name, category, key features, and tone
+
+Use POST request to a local endpoint like /generate
+
+🔗 EBAY API REQUIREMENTS
+Include OAuth2 integration to connect user’s eBay seller account
+
+Retrieve access token and refresh token
+
+Publish listing via:
+
+Inventory API (create item)
+
+Offer API (set price and stock)
+
+Listing API (publish the offer)
+
+Error handling: If token expires, refresh it or ask user to reconnect
+

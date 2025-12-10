@@ -1,0 +1,99 @@
+✨ Advanced Features (Included in MVP for Differentiation)
+
+4. Description HTML Builder with Related Products
+
+AI inserts 2-3 related products (from seller's inventory) at the end of the description to enable upselling.
+
+Seller can customize this with an HTML block editor or select layout presets.
+
+Products suggested by tag/category match.
+
+5. WYSIWYG Description Editor
+
+Allows the user to modify the AI-generated description visually or switch to HTML/code mode.
+
+Supports rich text formatting, bullet points, bold/italic, emojis, and tables.
+
+6. Category-Based Template System
+
+Users can define custom templates per product category (e.g., Electronics, Clothing).
+
+AI can use these templates as reference structure.
+
+Helps maintain brand consistency and speed up listing.
+
+7. Multilingual Description Generation
+
+Users can select a language (EN, ES, DE, FR, etc.) to generate localized content.
+
+Language switcher available per listing.
+
+8. SEO Score & Recommendations
+
+The system analyzes generated content and provides a score out of 100.
+
+Recommendations like: "Add brand name", "Include more sensory adjectives", "Mention shipping info".
+
+9. Listing Rewriter for Inactive Products
+
+Detects listings that have been active for more than 30 days with no sales.
+
+Offers to regenerate title/description with updated wording.
+
+Option to republish as a fresh listing with a new ID.
+
+10. AI Response Assistant for Buyer Messages
+
+Connects to eBay messaging or imports chat history.
+
+Suggests replies based on product data, tone, and sentiment.
+
+Reply tones include: friendly, professional, urgent.
+
+11. Auto-pricing Suggestion Engine
+
+Uses market data to recommend price ranges.
+
+Includes "Recommended Price", "Low Market Price", "Your Current Price" comparison.
+
+12. A/B Testing Engine
+
+Allows users to test two versions of a title and/or description.
+
+Tracks performance by click-through rate or impressions if available.
+
+Winner is promoted or kept.
+
+13. Scroll & Engagement Tracking (Beta)
+
+Tracks which sections of the description are read most (if embedded in mobile app or web iframe).
+
+Heatmap-style reporting.
+
+14. Promo Banner Generator for Descriptions
+
+Add visually attractive promo banners ("Buy 2 Get 1 Free", "Last Units!").
+
+Inserts HTML-friendly callout sections styled for eBay.
+
+15. Bundle & Cross-sell Generator
+
+Suggests bundles from seller's inventory.
+
+Automatically injects bundle recommendations into descriptions.
+
+Upsell products based on category or past sales.
+
+16. Product Trend Watcher
+
+Displays top trending keywords, categories, and formats on eBay.
+
+Can suggest products to list based on hot demand.
+
+17. Automated Re-publication System
+
+Detects listings with low/no views or that expired.
+
+Recreates listing with variation: new title, altered description, fresh images if provided.
+
+Avoids eBay duplicate penalties.

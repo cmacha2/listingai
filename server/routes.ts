@@ -4155,9 +4155,9 @@ ${analysis.description.split('\n\n').map((para: string) => {
         if (trimmed.includes(':')) {
           const [name, ...descParts] = trimmed.split(':');
           const desc = descParts.join(':').trim();
-          result += \`    <li><strong>\${name.trim()}:</strong> \${desc}</li>\\n\`;
+          result += '    <li><strong>' + name.trim() + ':</strong> ' + desc + '</li>\n';
         } else {
-          result += \`    <li><strong>\${trimmed}</strong></li>\\n\`;
+          result += '    <li><strong>' + trimmed + '</strong></li>\n';
         }
       }
     });
@@ -4165,7 +4165,7 @@ ${analysis.description.split('\n\n').map((para: string) => {
     return result;
   }
   // For regular paragraphs, preserve any existing HTML tags (like <strong>)
-  return \`<p>\${para}</p>\`;
+  return '<p>' + para + '</p>';
 }).join('\n\n')}
 
         </div>

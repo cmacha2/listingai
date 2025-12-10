@@ -3690,6 +3690,587 @@ Make each section professional, engaging, and appropriate for e-commerce. Use br
     }
   });
 
+  // Simple listing generator endpoint with hardcoded password
+  app.post("/api/simple-generator", upload.array('images', 5), async (req, res) => {
+    try {
+      const { password } = req.body;
+      
+      // Verify hardcoded password
+      if (password !== 'smartsavedepot') {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Invalid password' 
+        });
+      }
+
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Please upload at least one image' 
+        });
+      }
+
+      if (files.length > 5) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Maximum 5 images allowed' 
+        });
+      }
+
+      console.log(`📸 Processing ${files.length} images for simple generator`);
+
+      // Upload images to Cloudinary
+      const imageUrls: string[] = [];
+      for (const file of files) {
+        const base64Image = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+        
+        try {
+          const uploadResult = await cloudinary.uploader.upload(base64Image, {
+            folder: 'simple-listings',
+            resource_type: 'image',
+          });
+          imageUrls.push(uploadResult.secure_url);
+        } catch (uploadError) {
+          console.error('Cloudinary upload error:', uploadError);
+          return res.status(500).json({ 
+            success: false, 
+            message: 'Failed to upload images' 
+          });
+        }
+      }
+
+      // Analyze images with AI to generate title and description using EbayRank Pro prompt
+      const imageDataArray = files.map(file => 
+        `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
+      );
+
+      // First, get basic product analysis
+      const basicAnalysis = await analyzeProductImages(imageDataArray);
+      
+      // Now use the professional EbayRank Pro prompt to generate optimized title and description
+      const ebayRankPrompt = `"EbayRank Pro" is an advanced AI tool designed to enhance eBay listing visibility. Utilizing cutting-edge GPT technology, it specializes in creating SEO-optimized titles and descriptions, tailored to boost rankings and engagement on eBay's competitive marketplace.
+
+Act as a marketing expert with 20 years of experience in SEO and e-commerce optimization. Your task is to create an optimized title and product description for '${basicAnalysis.productName}' on eBay, utilizing your extensive knowledge and skills.
+
+PRODUCT INFORMATION ANALYZED FROM IMAGES:
+- Product: ${basicAnalysis.productName}
+- Brand: ${basicAnalysis.brand || 'Not specified'}
+- Model: ${basicAnalysis.model || basicAnalysis.mpn || 'Not specified'}
+- Category: ${basicAnalysis.categories?.join(', ') || 'General'}
+- Features: ${basicAnalysis.features}
+- Condition: ${basicAnalysis.condition || 'NEW'}
+- Color: ${basicAnalysis.color || 'Not specified'}
+- Material: ${basicAnalysis.material || 'Not specified'}
+- Key Attributes: ${JSON.stringify(basicAnalysis.productAspects || {})}
+
+REFERENCE EXAMPLE OF PROFESSIONAL STRUCTURE:
+Title Example: "Defiant FREEDOM Matte Black Keyed Entry Door - Top-Tier Home Security (1007789955)"
+
+Description Example Structure:
+"Ensure the safety of your home with the [Brand] [Product Name]. Engineered for [primary benefit], this [brand] [product type] provides [key value proposition], giving you [emotional benefit].
+
+Designed with a [key feature], this [product type] not only [benefit 1] but also [benefit 2]. The [model number] combines [attribute 1] with [attribute 2], making it a must-have for [target audience].
+
+Key Features:
+
+[Feature 1]: [Detailed benefit and explanation]
+
+[Feature 2]: [Detailed benefit and explanation]
+
+[Feature 3]: [Detailed benefit and explanation]
+
+With this [product type], you're investing in not just a product, but a promise of [core value proposition].
+
+Adhere to the manufacturer's guidelines for installation and maintenance to ensure the longevity and optimal performance of this [product type].
+
+Please note: The conditions of the products are exactly as seen in the photos. We stand by the quality and performance of this [brand] [product name], and we're confident it will serve your [use case] needs effectively."
+
+Follow these steps:
+
+1. Category Research and Keyword Identification:
+   - Perform in-depth research on the '${basicAnalysis.productName}' category in eBay
+   - Identify the most relevant primary and secondary keywords for maximum visibility
+
+2. Title Development (CRITICAL):
+   - Format: "[Brand] [Product Name] [Key Color/Material] [Product Type] - [Primary Benefit] ([Model/Part Number])"
+   - Maximum 80 characters
+   - Include: Brand, product name, key attribute (color/material), product type, model/part number
+   - Example: "Defiant FREEDOM Matte Black Keyed Entry Door - Top-Tier Home Security (1007789955)"
+
+3. Product Description (PROFESSIONAL & DETAILED):
+   - Opening Paragraph: Powerful introduction with emotional appeal and key benefits
+     * Use **bold** for brand name and product name (first mention)
+     * Use **bold** for key technical specs or model numbers
+   - Second Paragraph: Design and aesthetic appeal, model number mention
+     * Use **bold** for distinctive features (color, material, design elements)
+     * Use **bold** for model number
+   - Key Features Section: 3-5 bullet points with bold headers and detailed explanations
+     * Format: "Feature Name: Detailed explanation"
+   - Value Proposition: Emotional connection paragraph
+   - Care/Usage Instructions: Professional guidance
+   - Closing Statement: Confidence-building conclusion with condition note
+
+4. Professional Language Requirements:
+   - Use sophisticated, trust-building vocabulary
+   - Create emotional connection with buyer
+   - Emphasize quality, reliability, and value
+   - Include specific model numbers and identifiers
+   - Write 5-7 paragraphs minimum for comprehensive coverage
+   - Use **bold** (with **asterisks**) for key terms: brand names, model numbers, colors, materials, key features
+
+5. Structure Requirements:
+   - Paragraph 1: Problem/solution introduction with product name and brand
+   - Paragraph 2: Design, aesthetics, and model number
+   - Paragraph 3: Key Features list with detailed explanations
+   - Paragraph 4: Value proposition and investment angle
+   - Paragraph 5: Usage/care instructions
+   - Paragraph 6: Quality assurance and confidence statement
+
+CRITICAL REQUIREMENTS:
+- Title: MUST include brand, product name, key attribute, type, benefit, and model number
+- Title: MAXIMUM 80 characters
+- Description: 5-7 paragraphs, professional tone, detailed and comprehensive
+- Description: Include Key Features section with 3-5 points
+- Description: Use bold text for emphasis on feature names
+- Description: End with confidence statement and photo condition note
+- Style: Professional, trust-building, emotionally engaging
+- Focus: Quality, reliability, value for money, peace of mind
+
+Return ONLY a JSON object with this structure:
+{
+  "title": "Brand ProductName Color/Material Type - Benefit (ModelNumber)",
+  "description": "Full professional description with 5-7 paragraphs following the reference structure exactly"
+}`;
+
+      const openai = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY 
+      });
+
+      const seoResponse = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are EbayRank Pro, an advanced AI marketing expert with 20 years of SEO and e-commerce optimization experience. You specialize in creating high-converting, SEO-optimized eBay listings that follow professional formatting standards.
+
+CRITICAL FORMATTING RULES:
+1. Title: Maximum 80 characters, format: "Brand ProductName KeyAttribute Type - Benefit (ModelNumber)"
+2. Description: Use proper paragraph formatting with double line breaks between paragraphs
+3. Key Features: Format as "Key Features:" followed by feature items on new lines
+4. Each feature: Format as "[Feature Name]: [Detailed explanation]" on its own line
+5. Use professional language with emotional appeal and trust-building vocabulary
+6. Always end with the condition statement: "Please note: The conditions of the products are exactly as seen in the photos. We stand by the quality and performance of this [product], and we're confident it will serve your needs effectively."
+
+Always respond with valid JSON only.`
+          },
+          {
+            role: "user",
+            content: ebayRankPrompt
+          }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+        max_tokens: 2000,
+      });
+
+      const seoResult = JSON.parse(seoResponse.choices[0].message.content || "{}");
+      
+      // Process description to add HTML formatting
+      let processedDescription = seoResult.description || basicAnalysis.description;
+      
+      // Add strong tags to key phrases and brand names
+      if (basicAnalysis.brand) {
+        // Bold all instances of the brand name
+        const brandRegex = new RegExp(`\\b(${basicAnalysis.brand})\\b`, 'gi');
+        processedDescription = processedDescription.replace(brandRegex, '<strong>$1</strong>');
+      }
+      
+      // Bold product name (first occurrence only to avoid over-bolding)
+      if (basicAnalysis.productName) {
+        const productRegex = new RegExp(`\\b(${basicAnalysis.productName.split(' ').slice(0, 3).join(' ')})\\b`, 'i');
+        processedDescription = processedDescription.replace(productRegex, '<strong>$1</strong>');
+      }
+      
+      // Bold model numbers (patterns like: 1007789955, A1234, etc.)
+      processedDescription = processedDescription.replace(/\b([A-Z]?\d{4,}[A-Z]?)\b/g, '<strong>$1</strong>');
+      
+      // Bold key descriptive words (colors, materials, sizes)
+      const keyWords = ['matte black', 'keyed entry', 'leather', 'premium', 'professional', 'high-quality', 'top-tier'];
+      keyWords.forEach(word => {
+        const wordRegex = new RegExp(`\\b(${word})\\b`, 'gi');
+        processedDescription = processedDescription.replace(wordRegex, '<strong>$1</strong>');
+      });
+      
+      // Merge the SEO-optimized content with the basic analysis
+      const analysis = {
+        ...basicAnalysis,
+        title: seoResult.title || basicAnalysis.title,
+        description: processedDescription
+      };
+      
+      // Generate the HTML template with the analyzed data - EXACTLY as provided by user
+      const htmlTemplate = `<style>
+
+    body {
+
+        font-family: Arial, sans-serif;
+
+        margin: 0;
+
+        padding: 0;
+
+    }
+
+
+
+    .banner {
+
+        width: 100%;
+
+        display: block;
+
+    }
+
+
+
+    .widget-tab-radio {
+
+        display: none;
+
+    }
+
+
+
+    .navbar ul {
+
+        list-style-type: none;
+
+        margin: 0;
+
+        padding: 0;
+
+        overflow: hidden;
+
+        background-color: #333;
+
+        display: flex;
+
+        justify-content: space-around;
+
+    }
+
+
+
+    .navbar li {
+
+        flex-grow: 1;
+
+    }
+
+
+
+    .navbar li label {
+
+        display: block;
+
+        color: white;
+
+        text-align: center;
+
+        padding: 14px 16px;
+
+        text-decoration: none;
+
+        cursor: pointer;
+
+        background-color: #666;
+
+    }
+
+
+
+    .tab-content > div {
+
+        display: none;
+
+        padding: 20px;
+
+        background-color: #f1f1f1;
+
+    }
+
+
+
+    .tab-content > div > p {
+
+        font-size: 1.2em;
+
+        line-height: 1.5;
+
+        margin-bottom: 20px;
+
+    }
+
+
+
+    #widget-tab-19-radio-1:checked ~ .navbar li:nth-child(1) label,
+
+    #widget-tab-19-radio-2:checked ~ .navbar li:nth-child(2) label,
+
+    #widget-tab-19-radio-3:checked ~ .navbar li:nth-child(3) label,
+
+    #widget-tab-19-radio-4:checked ~ .navbar li:nth-child(4) label,
+
+    #widget-tab-19-radio-5:checked ~ .navbar li:nth-child(5) label,
+
+    #widget-tab-19-radio-6:checked ~ .navbar li:nth-child(6) label {
+
+        background-color: #f90;
+
+    }
+
+
+
+    #widget-tab-19-radio-1:checked ~ .tab-content > div:nth-child(1),
+
+    #widget-tab-19-radio-2:checked ~ .tab-content > div:nth-child(2),
+
+    #widget-tab-19-radio-3:checked ~ .tab-content > div:nth-child(3),
+
+    #widget-tab-19-radio-4:checked ~ .tab-content > div:nth-child(4),
+
+    #widget-tab-19-radio-5:checked ~ .tab-content > div:nth-child(5),
+
+    #widget-tab-19-radio-6:checked ~ .tab-content > div:nth-child(6) {
+
+        display: block;
+
+    }
+
+
+
+    .footer {
+
+        background-color: #f8f9fa;
+
+        text-align: center;
+
+        padding: 10px;
+
+        left: 0;
+
+        bottom: 0;
+
+        width: 100%;
+
+    }
+
+
+
+    .logo {
+
+        height: 50px;
+
+        width: 50px;
+
+        border-radius: 50%;
+
+    }
+
+</style>
+
+
+
+<img class="banner" src="https://res.cloudinary.com/cmacha2/image/upload/v1686886884/Technologi_Ebay_Billboard_5_hhhcdk.png" alt="Banner">
+
+
+
+<div id="widget-tab-19">
+
+    <input class="widget-tab-radio" type="radio" name="widget-tab-19-radio" id="widget-tab-19-radio-1" checked="">
+
+    <input class="widget-tab-radio" type="radio" name="widget-tab-19-radio" id="widget-tab-19-radio-2">
+
+    <input class="widget-tab-radio" type="radio" name="widget-tab-19-radio" id="widget-tab-19-radio-3">
+
+    <input class="widget-tab-radio" type="radio" name="widget-tab-19-radio" id="widget-tab-19-radio-4">
+
+    <input class="widget-tab-radio" type="radio" name="widget-tab-19-radio" id="widget-tab-19-radio-5">
+
+    <input class="widget-tab-radio" type="radio" name="widget-tab-19-radio" id="widget-tab-19-radio-6">
+
+
+
+    <div class="navbar">
+
+        <ul>
+
+            <li><label for="widget-tab-19-radio-1">Product Description</label></li>
+
+            <li><label for="widget-tab-19-radio-2">Shipping</label></li>
+
+            <li><label for="widget-tab-19-radio-3">Returns</label></li>
+
+            <li><label for="widget-tab-19-radio-4">Feedback</label></li>
+
+            <li><label for="widget-tab-19-radio-5">Contact Us</label></li>
+
+            <li><label for="widget-tab-19-radio-6">About Us</label></li>
+
+        </ul>
+
+    </div>
+
+
+
+    <div class="tab-content">
+
+        <div>
+
+            <h2>Product Description</h2>
+
+         <h3>${analysis.title}</h3>
+
+${analysis.description.split('\n\n').map((para: string) => {
+  // Check if this paragraph contains "Key Features:"
+  if (para.includes('Key Features:')) {
+    const parts = para.split('Key Features:');
+    const before = parts[0].trim();
+    const featuresText = parts[1]?.trim() || '';
+    
+    // Split features by newlines
+    const featureLines = featuresText.split('\n').filter((line: string) => line.trim());
+    
+    let result = '';
+    if (before) {
+      result += `<p>${before}</p>\n\n`;
+    }
+    result += '<p><strong>Key Features:</strong></p>\n<ul>\n';
+    featureLines.forEach((feature: string) => {
+      const trimmed = feature.trim();
+      if (trimmed) {
+        // Check if feature has a colon (Feature Name: Description format)
+        if (trimmed.includes(':')) {
+          const [name, ...descParts] = trimmed.split(':');
+          const desc = descParts.join(':').trim();
+          result += \`    <li><strong>\${name.trim()}:</strong> \${desc}</li>\\n\`;
+        } else {
+          result += \`    <li><strong>\${trimmed}</strong></li>\\n\`;
+        }
+      }
+    });
+    result += '</ul>';
+    return result;
+  }
+  // For regular paragraphs, preserve any existing HTML tags (like <strong>)
+  return \`<p>\${para}</p>\`;
+}).join('\n\n')}
+
+        </div>
+
+        <div>
+
+            <h2>Shipping Policy</h2>
+
+            <p>At Smart Save Depot, we pledge to offer you an unrivaled order processing experience marked by efficiency and security. Our commitment is such that upon receipt of your payment confirmation, your order is prioritized and prepared for dispatch within a single business day (Monday - Friday). This ensures that your purchases transition swiftly from our storage to your doorstep.
+
+We have chosen to collaborate exclusively with USPS, a renowned delivery service recognized for its steadfast reliability. This partnership is key to our confidence in guaranteeing you a seamless delivery experience. When you shop with us, rest assured that your orders are not just processed swiftly, but are also handled and shipped with utmost care and precision. This is part of our commitment to continually enhance your shopping experience at Smart Save Depot, because for us, your satisfaction remains paramount.
+
+</p>
+
+        </div>
+
+        <div>
+
+            <h2>Return Policy</h2>
+
+            <p>At Smart Save Depot, your absolute satisfaction is the core of our mission. As part of our dedication to providing an unparalleled shopping experience, we offer a hassle-free returns policy to ensure your peace of mind with every purchase.
+
+Should any item not meet your complete satisfaction, we provide you with the opportunity to return it within 30 days from the date of delivery. We kindly ask that the items be returned in their original, unused condition, and packaged securely in their original box.
+
+This policy reflects our unwavering commitment to your satisfaction and confidence in our products. At Smart Save Depot, we believe in our offerings and want you to feel the same. We strive to create a shopping experience that's as seamless and satisfactory as possible, right from selection through to purchase and beyond.
+
+</p>
+
+        </div>
+
+        <div>
+
+            <h2>Feedback</h2>
+
+            <p>At Smart Save Depot, your feedback serves as the cornerstone of our continuous drive for enhancement. Your thoughts, experiences, and suggestions are invaluable to us, shaping our services and offerings to better meet your expectations.
+
+We sincerely appreciate the effort and time you invest in providing us with a review once you've received your order. Each review received is not simply a comment; it is a powerful tool that allows us to refine and improve, ensuring that our practices align with your needs and desires.
+
+Remember, your voice matters at Smart Save Depot. Your feedback inspires us, encourages us, and, most importantly, aids us in delivering an experience that not only meets but also exceeds your expectations.
+
+</p>
+
+        </div>
+
+        <div>
+
+            <h2>Contact Us</h2>
+
+            <p>At Smart Save Depot, fostering open, transparent, and professional communication with our esteemed customers forms the bedrock of our ethos. We maintain a robust team of dedicated professionals who are readily available to address any queries, concerns, or issues you may encounter.
+
+Understanding the importance of timely and efficient communication, we have incorporated the eBay messaging system into our customer service framework. This allows us to provide you with swift, convenient, and comprehensive assistance directly through a platform familiar to you.
+
+Our commitment is to ensure that every interaction you have with Smart Save Depot is marked by the highest level of professionalism and customer-centricity. We aim to be here for you at every step of your journey with us, underlining the value we place on your experience and satisfaction.
+
+.</p>
+
+        </div>
+
+        <div>
+
+            <h2>About Us</h2>
+
+            <p>At Smart Save Depot, fostering open, transparent, and professional communication with our esteemed customers forms the bedrock of our ethos. We maintain a robust team of dedicated professionals who are readily available to address any queries, concerns, or issues you may encounter.
+
+Understanding the importance of timely and efficient communication, we have incorporated the eBay messaging system into our customer service framework. This allows us to provide you with swift, convenient, and comprehensive assistance directly through a platform familiar to you.
+
+Our commitment is to ensure that every interaction you have with Smart Save Depot is marked by the highest level of professionalism and customer-centricity. We aim to be here for you at every step of your journey with us, underlining the value we place on your experience and satisfaction.
+
+</p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<div class="footer">
+
+    <img src="https://i.ebayimg.com/images/g/SD8AAOSwG-tkiRJp/s-l140.webp" class="logo" alt="Store Logo">
+
+    <p>© 2023 Smart Save Depot. All rights reserved.</p>
+
+</div>`;
+
+      res.json({
+        success: true,
+        title: analysis.title,
+        description: analysis.description,
+        features: analysis.features,
+        imageUrls,
+        htmlTemplate,
+        message: 'Listing generated successfully'
+      });
+
+    } catch (error) {
+      console.error('Simple generator error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Failed to generate listing' 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

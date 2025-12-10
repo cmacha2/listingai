@@ -15,6 +15,7 @@ import ListingDetailsPage from "@/pages/listing-details";
 import LandingPage from "@/pages/landing";
 import BlogPostPage from "@/pages/blog-post";
 import BlogPage from "@/pages/blog";
+import SimpleGeneratorPage from "@/pages/simple-generator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,7 @@ function App() {
         <Route path="/editor/:listingId" component={EditorPage} />
         <Route path="/blog" component={BlogPage} />
         <Route path="/blog/:slug" component={BlogPostPage} />
+        <Route path="/simple-generator" component={SimpleGeneratorPage} />
         <Route>
           <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="text-center">

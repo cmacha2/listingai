@@ -3799,18 +3799,28 @@ Follow these steps:
    - Include: Brand, product name, key attribute (color/material), product type, model/part number
    - Example: "Defiant FREEDOM Matte Black Keyed Entry Door - Top-Tier Home Security (1007789955)"
 
-3. Product Description (PROFESSIONAL & DETAILED):
+3. Product Description (PROFESSIONAL & DETAILED - HTML FORMAT):
+   - IMPORTANT: Return description as HTML-formatted text, not plain text
    - Opening Paragraph: Powerful introduction with emotional appeal and key benefits
-     * Use **bold** for brand name and product name (first mention)
-     * Use **bold** for key technical specs or model numbers
+     * Use <strong> tags for brand name and product name (first mention)
+     * Use <strong> tags for key technical specs or model numbers
+     * Example: "Ensure the safety of your home with the <strong>Defiant FREEDOM</strong> Matte Black Keyed Entry Door."
    - Second Paragraph: Design and aesthetic appeal, model number mention
-     * Use **bold** for distinctive features (color, material, design elements)
-     * Use **bold** for model number
-   - Key Features Section: 3-5 bullet points with bold headers and detailed explanations
-     * Format: "Feature Name: Detailed explanation"
+     * Use <strong> tags for distinctive features (color, material, design elements)
+     * Use <strong> tags for model number
+     * Example: "Designed with a stylish <strong>matte black finish</strong>, this keyed entry door..."
+   - Key Features Section: Format as HTML list with <ul> and <li> tags
+     * Start with: "Key Features:"
+     * Each feature as: <li><strong>Feature Name:</strong> Detailed explanation</li>
+     * Example:
+       Key Features:
+       
+       <li><strong>Superior Security:</strong> The Defiant FREEDOM lockset offers robust security...</li>
+       <li><strong>Stylish Design:</strong> The matte black finish blends effortlessly...</li>
    - Value Proposition: Emotional connection paragraph
    - Care/Usage Instructions: Professional guidance
    - Closing Statement: Confidence-building conclusion with condition note
+     * Use <strong> tags for "Please note:"
 
 4. Professional Language Requirements:
    - Use sophisticated, trust-building vocabulary
@@ -3818,7 +3828,9 @@ Follow these steps:
    - Emphasize quality, reliability, and value
    - Include specific model numbers and identifiers
    - Write 5-7 paragraphs minimum for comprehensive coverage
-   - Use **bold** (with **asterisks**) for key terms: brand names, model numbers, colors, materials, key features
+   - Use <strong> HTML tags for emphasis: brand names, model numbers, colors, materials, key features
+   - Separate paragraphs with double line breaks (\n\n)
+   - Format Key Features as proper HTML list items within <li> tags
 
 5. Structure Requirements:
    - Paragraph 1: Problem/solution introduction with product name and brand
@@ -3831,17 +3843,24 @@ Follow these steps:
 CRITICAL REQUIREMENTS:
 - Title: MUST include brand, product name, key attribute, type, benefit, and model number
 - Title: MAXIMUM 80 characters
+- Description: MUST be HTML-formatted with <strong> tags and <li> tags
 - Description: 5-7 paragraphs, professional tone, detailed and comprehensive
-- Description: Include Key Features section with 3-5 points
-- Description: Use bold text for emphasis on feature names
-- Description: End with confidence statement and photo condition note
+- Description: Include Key Features section formatted as HTML list items
+- Description: Use <strong> HTML tags for emphasis (NOT markdown)
+- Description: End with confidence statement using <strong>Please note:</strong>
 - Style: Professional, trust-building, emotionally engaging
 - Focus: Quality, reliability, value for money, peace of mind
 
 Return ONLY a JSON object with this structure:
 {
   "title": "Brand ProductName Color/Material Type - Benefit (ModelNumber)",
-  "description": "Full professional description with 5-7 paragraphs following the reference structure exactly"
+  "description": "HTML-formatted description with <strong> tags for emphasis and <li> tags for Key Features list. Example: 'Ensure the safety with the <strong>Defiant FREEDOM</strong>...\\n\\nKey Features:\\n\\n<li><strong>Superior Security:</strong> The lockset offers...</li>\\n<li><strong>Stylish Design:</strong> The finish blends...</li>\\n\\n<strong>Please note:</strong> The conditions...'"
+}
+
+EXAMPLE RESPONSE FORMAT:
+{
+  "title": "Defiant FREEDOM Matte Black Keyed Entry Door - Top-Tier Home Security (1007789955)",
+  "description": "Ensure the safety of your home with the <strong>Defiant FREEDOM</strong> Matte Black Keyed Entry Door. Engineered for top-tier home security, this <strong>Defiant</strong> lockset provides robust protection against unauthorized entry, giving you peace of mind whether you're at home or away.\\n\\nDesigned with a stylish <strong>matte black finish</strong>, this keyed entry door not only enhances your home's security but also adds a touch of sophistication to your exterior décor. The <strong>1007789955 model</strong> combines aesthetic appeal with reliable functionality, making it a must-have for any modern home.\\n\\nKey Features:\\n\\n<li><strong>Superior Security:</strong> The Defiant FREEDOM lockset offers robust security for your home, deterring unauthorized access.</li>\\n<li><strong>Stylish Design:</strong> The matte black finish blends effortlessly with various architectural styles, enhancing your home's curb appeal.</li>\\n<li><strong>Quality:</strong> As a product of Defiant, a trusted name in home security solutions, you can expect premium performance and durability.</li>\\n\\nWith this keyed entry door, you're investing in not just a product, but a promise of safety and security.\\n\\nAdhere to the manufacturer's guidelines for installation and maintenance to ensure the longevity and optimal performance of this lockset.\\n\\n<strong>Please note:</strong> The conditions of the products are exactly as seen in the photos. We stand by the quality and performance of this Defiant FREEDOM keyed entry door, and we're confident it will serve your security needs effectively."
 }`;
 
       const openai = new OpenAI({ 
@@ -3857,13 +3876,25 @@ Return ONLY a JSON object with this structure:
 
 CRITICAL FORMATTING RULES:
 1. Title: Maximum 80 characters, format: "Brand ProductName KeyAttribute Type - Benefit (ModelNumber)"
-2. Description: Use proper paragraph formatting with double line breaks between paragraphs
-3. Key Features: Format as "Key Features:" followed by feature items on new lines
-4. Each feature: Format as "[Feature Name]: [Detailed explanation]" on its own line
-5. Use professional language with emotional appeal and trust-building vocabulary
-6. Always end with the condition statement: "Please note: The conditions of the products are exactly as seen in the photos. We stand by the quality and performance of this [product], and we're confident it will serve your needs effectively."
 
-Always respond with valid JSON only.`
+2. Description: MUST be HTML-formatted text with the following structure:
+   - Use <strong> tags to emphasize important terms (brand, model numbers, colors, materials)
+   - Separate paragraphs with double line breaks (\n\n)
+   - Format Key Features section as:
+     Key Features:
+     
+     <li><strong>Feature Name:</strong> Detailed explanation</li>
+     <li><strong>Feature Name:</strong> Detailed explanation</li>
+   - Use <strong> tags for "Please note:" in the final statement
+   
+3. Example HTML format:
+   "Ensure the safety of your home with the <strong>Defiant FREEDOM</strong> Matte Black Keyed Entry Door.\n\nDesigned with a <strong>matte black finish</strong>, this keyed entry door...\n\nKey Features:\n\n<li><strong>Superior Security:</strong> The Defiant FREEDOM lockset...</li>\n<li><strong>Stylish Design:</strong> The matte black finish...</li>\n\nWith this keyed entry door...\n\n<strong>Please note:</strong> The conditions of the products are exactly as seen in the photos."
+
+4. Use professional language with emotional appeal and trust-building vocabulary
+5. CRITICAL: Return description as HTML-formatted text, not plain text
+6. Always end with: "<strong>Please note:</strong> The conditions of the products are exactly as seen in the photos. We stand by the quality and performance of this [product], and we're confident it will serve your needs effectively."
+
+Always respond with valid JSON only. The description field must contain HTML tags.`
           },
           {
             role: "user",
@@ -3877,37 +3908,11 @@ Always respond with valid JSON only.`
 
       const seoResult = JSON.parse(seoResponse.choices[0].message.content || "{}");
       
-      // Process description to add HTML formatting
-      let processedDescription = seoResult.description || basicAnalysis.description;
-      
-      // Add strong tags to key phrases and brand names
-      if (basicAnalysis.brand) {
-        // Bold all instances of the brand name
-        const brandRegex = new RegExp(`\\b(${basicAnalysis.brand})\\b`, 'gi');
-        processedDescription = processedDescription.replace(brandRegex, '<strong>$1</strong>');
-      }
-      
-      // Bold product name (first occurrence only to avoid over-bolding)
-      if (basicAnalysis.productName) {
-        const productRegex = new RegExp(`\\b(${basicAnalysis.productName.split(' ').slice(0, 3).join(' ')})\\b`, 'i');
-        processedDescription = processedDescription.replace(productRegex, '<strong>$1</strong>');
-      }
-      
-      // Bold model numbers (patterns like: 1007789955, A1234, etc.)
-      processedDescription = processedDescription.replace(/\b([A-Z]?\d{4,}[A-Z]?)\b/g, '<strong>$1</strong>');
-      
-      // Bold key descriptive words (colors, materials, sizes)
-      const keyWords = ['matte black', 'keyed entry', 'leather', 'premium', 'professional', 'high-quality', 'top-tier'];
-      keyWords.forEach(word => {
-        const wordRegex = new RegExp(`\\b(${word})\\b`, 'gi');
-        processedDescription = processedDescription.replace(wordRegex, '<strong>$1</strong>');
-      });
-      
-      // Merge the SEO-optimized content with the basic analysis
+      // Use the HTML-formatted description directly from the LLM
       const analysis = {
         ...basicAnalysis,
         title: seoResult.title || basicAnalysis.title,
-        description: processedDescription
+        description: seoResult.description || basicAnalysis.description
       };
       
       // Generate the HTML template with the analyzed data - EXACTLY as provided by user
@@ -4134,38 +4139,52 @@ Always respond with valid JSON only.`
          <h3>${analysis.title}</h3>
 
 ${analysis.description.split('\n\n').map((para: string) => {
-  // Check if this paragraph contains "Key Features:"
+  // Check if paragraph contains Key Features section with HTML list items
   if (para.includes('Key Features:')) {
+    // Split the paragraph at Key Features
     const parts = para.split('Key Features:');
-    const before = parts[0].trim();
-    const featuresText = parts[1]?.trim() || '';
-    
-    // Split features by newlines
-    const featureLines = featuresText.split('\n').filter((line: string) => line.trim());
+    const before = parts[0]?.trim() || '';
+    const featuresSection = parts[1]?.trim() || '';
     
     let result = '';
+    // Add any content before Key Features as a paragraph
     if (before) {
-      result += `<p>${before}</p>\n\n`;
+      result += '<p>' + before + '</p>\n\n';
     }
-    result += '<p><strong>Key Features:</strong></p>\n<ul>\n';
-    featureLines.forEach((feature: string) => {
-      const trimmed = feature.trim();
-      if (trimmed) {
-        // Check if feature has a colon (Feature Name: Description format)
-        if (trimmed.includes(':')) {
-          const [name, ...descParts] = trimmed.split(':');
-          const desc = descParts.join(':').trim();
-          result += '    <li><strong>' + name.trim() + ':</strong> ' + desc + '</li>\n';
-        } else {
-          result += '    <li><strong>' + trimmed + '</strong></li>\n';
-        }
-      }
-    });
-    result += '</ul>';
+    
+    // Add Key Features header
+    result += '<p><strong>Key Features:</strong></p>\n';
+    
+    // Check if features already have <li> tags from LLM
+    if (featuresSection.includes('<li>')) {
+      // Features already formatted as HTML list items, wrap in <ul>
+      result += '<ul>\n' + featuresSection + '\n</ul>';
+    } else {
+      // Fallback: split by newlines and wrap each line in <li>
+      result += '<ul>\n';
+      featuresSection.split('\n').filter((line: string) => line.trim()).forEach((feature: string) => {
+        result += '    ' + feature.trim() + '\n';
+      });
+      result += '</ul>';
+    }
+    
     return result;
   }
-  // For regular paragraphs, preserve any existing HTML tags (like <strong>)
-  return '<p>' + para + '</p>';
+  
+  // For paragraphs with HTML list items but no "Key Features:" text
+  if (para.includes('<li>')) {
+    // Already contains HTML, just wrap in <ul> if not already wrapped
+    if (!para.includes('<ul>')) {
+      return '<ul>\n' + para + '\n</ul>';
+    }
+    return para;
+  }
+  
+  // For regular paragraphs, wrap in <p> tags if not already wrapped
+  if (!para.startsWith('<p>')) {
+    return '<p>' + para + '</p>';
+  }
+  return para;
 }).join('\n\n')}
 
         </div>

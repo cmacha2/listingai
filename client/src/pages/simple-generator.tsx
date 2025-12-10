@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Upload, Eye, Copy, CheckCircle } from "lucide-react";
 
 export default function SimpleGenerator() {
@@ -14,6 +15,10 @@ export default function SimpleGenerator() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  
+  // Editable fields
+  const [editableTitle, setEditableTitle] = useState("");
+  const [editableDescription, setEditableDescription] = useState("");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -23,6 +28,37 @@ export default function SimpleGenerator() {
     }
     setImages(files);
     setError("");
+  };
+
+  // Initialize editable fields when result changes
+  useEffect(() => {
+    if (result) {
+      setEditableTitle(result.title || "");
+      setEditableDescription(result.description || "");
+    }
+  }, [result]);
+
+  // Function to regenerate HTML with edited content
+  const regenerateHTML = () => {
+    if (!result?.htmlTemplate) return result?.htmlTemplate || "";
+    
+    // Replace title and description in the HTML template
+    let updatedHTML = result.htmlTemplate;
+    
+    // Replace title - look for <h1> tag in the template
+    updatedHTML = updatedHTML.replace(
+      /<h1[^>]*>.*?<\/h1>/,
+      `<h1 style="color: #000; font-size: 24px; font-weight: bold; margin-bottom: 15px;">${editableTitle}</h1>`
+    );
+    
+    // Replace description - look for the description paragraph
+    const descRegex = /<p style="line-height: 1\.8; color: #333; margin-bottom: 20px;">[\s\S]*?<\/p>/;
+    updatedHTML = updatedHTML.replace(
+      descRegex,
+      `<p style="line-height: 1.8; color: #333; margin-bottom: 20px;">${editableDescription}</p>`
+    );
+    
+    return updatedHTML;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,8 +105,9 @@ export default function SimpleGenerator() {
   };
 
   const copyToClipboard = () => {
-    if (result?.htmlTemplate) {
-      navigator.clipboard.writeText(result.htmlTemplate);
+    const htmlToCopy = regenerateHTML();
+    if (htmlToCopy) {
+      navigator.clipboard.writeText(htmlToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -159,17 +196,29 @@ export default function SimpleGenerator() {
 
                 <div className="space-y-4">
                   <div>
-                    <Label className="text-lg font-semibold">Title</Label>
-                    <div className="mt-2 p-4 bg-gray-50 rounded-lg border">
-                      <p className="text-gray-800">{result.title}</p>
-                    </div>
+                    <Label htmlFor="editable-title" className="text-lg font-semibold">
+                      Title (editable)
+                    </Label>
+                    <Input
+                      id="editable-title"
+                      value={editableTitle}
+                      onChange={(e) => setEditableTitle(e.target.value)}
+                      className="mt-2 text-base"
+                      placeholder="Enter listing title"
+                    />
                   </div>
 
                   <div>
-                    <Label className="text-lg font-semibold">Description</Label>
-                    <div className="mt-2 p-4 bg-gray-50 rounded-lg border">
-                      <p className="text-gray-800">{result.description}</p>
-                    </div>
+                    <Label htmlFor="editable-description" className="text-lg font-semibold">
+                      Description (editable)
+                    </Label>
+                    <Textarea
+                      id="editable-description"
+                      value={editableDescription}
+                      onChange={(e) => setEditableDescription(e.target.value)}
+                      className="mt-2 min-h-[200px] text-base"
+                      placeholder="Enter listing description"
+                    />
                   </div>
 
                   {result.imageUrls && result.imageUrls.length > 0 && (
@@ -222,7 +271,7 @@ export default function SimpleGenerator() {
                       </Label>
                       <div
                         className="border rounded overflow-auto max-h-[600px]"
-                        dangerouslySetInnerHTML={{ __html: result.htmlTemplate }}
+                        dangerouslySetInnerHTML={{ __html: regenerateHTML() }}
                       />
                     </div>
                   )}

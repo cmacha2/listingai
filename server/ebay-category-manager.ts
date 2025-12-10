@@ -13,6 +13,7 @@
 import { ebayOAuth } from './ebay';
 import { openai } from './openai';
 import { taxonomyService, type EbayCategory } from './ebay-taxonomy-cache';
+import { catalogService } from './ebay-category-catalog';
 
 export interface ProductData {
   title: string;
@@ -146,50 +147,30 @@ class EbayCategoryManager {
 
   /**
    * AI-only detection without eBay token
-   * Uses curated list of most common verified leaf categories
+   * Uses COMPLETE eBay category catalog (thousands of categories)
    */
   private async detectWithAIOnly(
     productData: ProductData,
     marketplaceId: string
   ): Promise<CategoryResult | null> {
     try {
-      console.log('🤖 Using AI-only mode with curated categories...');
+      console.log('🤖 Using AI-only mode with FULL eBay catalog...');
 
-      // Curated list of VERIFIED LEAF categories for common products
-      // These have been tested and confirmed to accept listings
-      const curatedCategories = `
-9355: Cell Phones & Smartphones
-177: Laptops & Netbooks
-171485: Tablets & eBook Readers
-15052: Headphones
-30090: Digital Cameras
-80053: Computer Monitors
-164: CPUs & Processors
-170083: Computer Memory (RAM)
-175669: Hard Drives (HDD, SSD & NAS)
-1244: Computer Motherboards
-27386: Graphics/Video Cards
-15709: Men's Athletic Shoes (verified leaf)
-55793: Women's Athletic Shoes (verified leaf)
-57988: Men's Casual Shoes (verified leaf)
-55793: Women's Heels (verified leaf)
-57991: Men's T-Shirts (verified leaf)
-53159: Women's Dresses (verified leaf)
-15273: Fitness, Running & Yoga
-267: Books
-11233: Music
-246: Action Figures
-233: Board & Traditional Games
-31786: Skin Care
-11855: Makeup
-6028: Automotive Parts & Accessories
-281: Fashion Jewelry
-15032: Office Products
-181486: Decorative Collectibles (verified leaf)
-260324: Home Improvement (verified leaf)
-`;
+      // Get relevant categories from the complete catalog
+      const productText = `${productData.title} ${productData.description || ''} ${productData.brand || ''}`;
+      const relevantCategories = await catalogService.findRelevantCategories(productText, 200);
 
-      const prompt = `You are an expert eBay categorization system. Analyze this product and select THE MOST SPECIFIC category from the available options.
+      if (relevantCategories.length === 0) {
+        console.warn('⚠️ No relevant categories found in catalog');
+        return null;
+      }
+
+      console.log(`📦 Found ${relevantCategories.length} relevant categories for product`);
+
+      // Format categories for AI prompt (limit to prevent token overflow)
+      const categoryList = catalogService.formatForAIPrompt(relevantCategories, 12000);
+
+      const prompt = `You are an expert eBay categorization system with access to the COMPLETE eBay catalog. Analyze this product and select THE MOST SPECIFIC and ACCURATE category.
 
 PRODUCT:
 Title: ${productData.title}
@@ -198,21 +179,24 @@ Description: ${productData.description || 'Not provided'}
 Type: ${productData.type || 'Not specified'}
 Features: ${productData.features?.join(', ') || 'Not specified'}
 Price: ${productData.price ? `$${productData.price}` : 'Not specified'}
+Condition: ${productData.condition || 'Not specified'}
 
-AVAILABLE CATEGORIES:
-${curatedCategories}
+AVAILABLE CATEGORIES (from ${relevantCategories.length} relevant matches):
+${categoryList}
 
-RULES:
-1. Select the MOST SPECIFIC category that matches
-2. Consider brand, type, and features
-3. Return ONLY valid JSON
+CRITICAL RULES:
+1. Select the MOST SPECIFIC category possible (e.g., "Men's Athletic Shoes" NOT "Shoes")
+2. The category MUST exist in the provided list
+3. Consider ALL product details: brand, type, features, condition
+4. Prioritize specificity over generality
+5. Return ONLY valid JSON
 
 Respond with JSON only:
 {
-  "categoryId": "the_category_id",
-  "categoryName": "the_category_name",
-  "confidence": 0.90,
-  "reasoning": "Brief explanation"
+  "categoryId": "the_exact_category_id",
+  "categoryName": "the_exact_category_name",
+  "confidence": 0.95,
+  "reasoning": "Brief 1-sentence explanation"
 }`;
 
       const response = await openai.chat.completions.create({
@@ -220,7 +204,7 @@ Respond with JSON only:
         messages: [
           {
             role: "system",
-            content: "You are an expert eBay categorization AI. Always respond with valid JSON."
+            content: "You are an expert eBay categorization AI with access to the complete category catalog. Always respond with valid JSON and select the most specific category."
           },
           {
             role: "user",
@@ -229,7 +213,7 @@ Respond with JSON only:
         ],
         response_format: { type: "json_object" },
         temperature: 0.1,
-        max_tokens: 300,
+        max_tokens: 400,
       });
 
       const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -239,14 +223,22 @@ Respond with JSON only:
         return null;
       }
 
-      console.log(`✅ AI-only detected: ${result.categoryId} - ${result.categoryName}`);
+      // Verify the category exists in our catalog
+      const categoryInfo = await catalogService.findById(result.categoryId);
+
+      if (!categoryInfo) {
+        console.warn(`⚠️ AI suggested non-existent category: ${result.categoryId}`);
+        return null;
+      }
+
+      console.log(`✅ AI-only detected: ${result.categoryId} - ${result.categoryName} (from ${relevantCategories.length} options)`);
 
       return {
         categoryId: result.categoryId,
         categoryName: result.categoryName,
         fullPath: result.categoryName, // Don't have full path in AI-only mode
-        confidence: result.confidence || 0.75,
-        strategy: 'ai_only',
+        confidence: result.confidence || 0.80,
+        strategy: 'ai_full_catalog',
         isValidated: false, // Cannot validate without eBay token
         aspects: []
       };

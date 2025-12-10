@@ -233,6 +233,10 @@ Respond with JSON only:
 
       console.log(`✅ AI-only detected: ${result.categoryId} - ${result.categoryName} (from ${relevantCategories.length} options)`);
 
+      // WARNING: Without eBay token, we cannot validate if this category belongs to the marketplace
+      // The category might exist in our catalog but not in the user's marketplace tree
+      console.warn(`⚠️ Category ${result.categoryId} cannot be validated without eBay token - may cause marketplace mismatch errors`);
+
       return {
         categoryId: result.categoryId,
         categoryName: result.categoryName,

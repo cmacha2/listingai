@@ -3116,11 +3116,15 @@ Make each section professional, engaging, and appropriate for e-commerce. Use br
       // Reset retry counter for fresh detection
       resetCategoryRetries(productData);
       
-      // Try to get user's eBay access token for API validation
+      // Get user information for marketplace
       const userId = req.session.userId!;
+      const user = await storage.getUser(userId);
+      const userMarketplace = user?.selectedMarketplace || 'EBAY_US';
+
+      // Try to get user's eBay access token for API validation
       let accessToken = 'dummy_token_for_ai_fallback';
       let hasValidToken = false;
-      
+
       try {
         const validToken = await ebayOAuth.ensureValidToken(userId);
         if (validToken) {
@@ -3129,14 +3133,28 @@ Make each section professional, engaging, and appropriate for e-commerce. Use br
           console.log('✅ Using valid eBay token for category validation');
         }
       } catch (error) {
-        console.log('⚠️ No valid eBay token available, using AI-only detection');
+        console.log(`⚠️ No valid eBay token available for marketplace ${userMarketplace}, using AI-only detection`);
       }
 
-      // Detect optimal leaf category with comprehensive validation
+      // CRITICAL: Require eBay connection for category detection
+      // Without a valid eBay token, we cannot validate if categories belong to the marketplace
+      if (!hasValidToken) {
+        console.warn(`⚠️ No eBay token - cannot validate categories for marketplace ${userMarketplace}`);
+        return res.status(401).json({
+          success: false,
+          message: "Please connect your eBay account to use category suggestions. Go to eBay Integration page to connect.",
+          type: "EBAY_CONNECTION_REQUIRED",
+          action: "CONNECT_EBAY",
+          redirectUrl: "/ebay-integration"
+        });
+      }
+
+      // CRITICAL: Always pass user's marketplace with valid token
+      // This ensures categories are validated against the correct marketplace tree
       const categoryResult = await detectEbayLeafCategory(
         accessToken,
         productData,
-        hasValidToken ? 'EBAY_US' : undefined
+        userMarketplace
       );
 
       // Log the result for monitoring
@@ -3147,7 +3165,8 @@ Make each section professional, engaging, and appropriate for e-commerce. Use br
         strategy: categoryResult.strategy,
         isValidated: categoryResult.isValidated,
         retryCount: categoryResult.retryCount,
-        productTitle: productName
+        productTitle: productName,
+        marketplace: userMarketplace
       });
 
       // Always return a valid result (the system guarantees this)
@@ -3161,7 +3180,8 @@ Make each section professional, engaging, and appropriate for e-commerce. Use br
         retryCount: categoryResult.retryCount,
         aspects: categoryResult.aspects || [],
         hasEbayToken: hasValidToken,
-        message: `Category detected using ${categoryResult.strategy} strategy`
+        marketplace: userMarketplace,
+        message: `Category detected using ${categoryResult.strategy} strategy for ${userMarketplace}`
       });
 
     } catch (error) {

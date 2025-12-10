@@ -56,7 +56,12 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   if (req.session.userId) {
     next();
   } else {
-    res.status(401).json({ message: "Unauthorized" });
+    console.warn('⚠️ Authentication required but no session found');
+    res.status(401).json({
+      message: "Your session has expired. Please refresh the page and log in again.",
+      type: "SESSION_EXPIRED",
+      action: "LOGIN_REQUIRED"
+    });
   }
 };
 
@@ -1459,43 +1464,69 @@ Make each section professional, engaging, and appropriate for e-commerce. Use br
         });
       }
 
-      // Use the new comprehensive category manager for robust category detection
-      console.log("🎯 Detecting optimal eBay leaf category with comprehensive system...");
-      try {
-        const { detectEbayLeafCategory, resetCategoryRetries } = await import('./ebay-category-manager');
-        
-        // Prepare product data for category detection
-        const productData = {
-          title: data.productName,
-          description: data.description || data.features || '',
-          brand: data.brand || '',
-          features: data.features ? [data.features] : [],
-          price: data.price ? parseFloat(data.price.toString()) : undefined,
-          condition: data.condition,
-          imageUrls: data.imageUrls || []
-        };
-        
-        // Reset retry counter for fresh attempt
-        resetCategoryRetries(productData);
-        
-        // Detect optimal leaf category with full validation
-        const categoryResult = await detectEbayLeafCategory(
-          user.ebayAccessToken!,
-          productData,
-          user.selectedMarketplace || 'EBAY_US'
-        );
-        
-        // Always use the detected category (guaranteed to be valid)
-        data.categoryId = categoryResult.categoryId;
-        console.log(`✅ Using detected category: ${categoryResult.categoryId} - ${categoryResult.categoryName} (confidence: ${categoryResult.confidence}, strategy: ${categoryResult.strategy}, validated: ${categoryResult.isValidated}, retries: ${categoryResult.retryCount})`);
-        
-      } catch (error) {
-        console.error("❌ Comprehensive category detection failed:", error);
-        return res.status(400).json({
-          message: "Failed to determine valid eBay category. This should never happen - please contact support.",
-          type: "CATEGORY_DETECTION_ERROR",
-          error: error instanceof Error ? error.message : "Unknown error"
-        });
+      // Use category from request if provided, otherwise detect automatically
+      if (!data.categoryId) {
+        console.log("🎯 No category provided, detecting optimal eBay leaf category...");
+        try {
+          const { detectEbayLeafCategory, resetCategoryRetries } = await import('./ebay-category-manager');
+
+          // Prepare product data for category detection
+          const productData = {
+            title: data.productName,
+            description: data.description || data.features || '',
+            brand: data.brand || '',
+            features: data.features ? [data.features] : [],
+            price: data.price ? parseFloat(data.price.toString()) : undefined,
+            condition: data.condition,
+            imageUrls: data.imageUrls || []
+          };
+
+          // Reset retry counter for fresh attempt
+          resetCategoryRetries(productData);
+
+          // Detect optimal leaf category with full validation
+          const categoryResult = await detectEbayLeafCategory(
+            user.ebayAccessToken!,
+            productData,
+            user.selectedMarketplace || 'EBAY_US'
+          );
+
+          // Use the detected category
+          data.categoryId = categoryResult.categoryId;
+          console.log(`✅ Using detected category: ${categoryResult.categoryId} - ${categoryResult.categoryName} (confidence: ${categoryResult.confidence}, strategy: ${categoryResult.strategy}, validated: ${categoryResult.isValidated})`);
+
+        } catch (error) {
+          console.error("❌ Category detection failed:", error);
+          return res.status(400).json({
+            message: "Failed to determine valid eBay category. Please select a category manually.",
+            type: "CATEGORY_DETECTION_ERROR",
+            error: error instanceof Error ? error.message : "Unknown error"
+          });
+        }
+      } else {
+        console.log(`✅ Using user-selected category: ${data.categoryId}`);
+
+        // Validate the provided category is a leaf category
+        try {
+          const isLeaf = await ebayOAuth.isLeafCategory(
+            user.ebayAccessToken!,
+            data.categoryId,
+            user.selectedMarketplace || 'EBAY_US'
+          );
+
+          if (!isLeaf) {
+            console.warn(`⚠️ Category ${data.categoryId} is not a leaf category`);
+            return res.status(400).json({
+              message: `Category ${data.categoryId} is not a valid leaf category. Please select a more specific category.`,
+              type: "INVALID_CATEGORY"
+            });
+          }
+
+          console.log(`✅ Category ${data.categoryId} validated as leaf category`);
+        } catch (validationError) {
+          console.error(`❌ Failed to validate category ${data.categoryId}:`, validationError);
+          // Continue anyway - eBay will catch it if invalid
+        }
       }
 
       // Generate SEO-optimized title and description if not provided

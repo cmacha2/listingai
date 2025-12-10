@@ -637,8 +637,70 @@ export async function analyzeProductImage(imageData: string): Promise<ImageAnaly
   return analyzeProductImages([imageData]);
 }
 
+/**
+ * Filter and remove eBay prohibited words from text
+ * eBay prohibits sellers from making certain claims that could mislead buyers
+ */
+function filterEbayProhibitedWords(text: string): string {
+  if (!text) return text;
+
+  // List of prohibited phrases and their safer replacements
+  const prohibitedPhrases: Array<[RegExp, string]> = [
+    // Guarantees - eBay provides their own buyer protection
+    [/satisfaction\s+guarantee/gi, 'quality product'],
+    [/money[\s-]back\s+guarantee/gi, 'reliable purchase'],
+    [/100%\s+satisfaction/gi, 'quality'],
+    [/\bguaranteed\b/gi, 'expected'],
+    [/\bguarantee\b/gi, ''],
+
+    // Risk/Warranty claims
+    [/risk[\s-]free/gi, 'reliable'],
+    [/no\s+risk/gi, 'trusted'],
+    [/\bwarranty\b(?!\s+from\s+manufacturer)/gi, ''], // Allow "warranty from manufacturer"
+
+    // Authenticity claims (can imply others are fake)
+    [/100%\s+authentic/gi, 'genuine'],
+    [/100%\s+original/gi, 'original'],
+    [/\bauthentic\b(?!\s+brand)/gi, ''], // Allow "authentic brand"
+
+    // Price/Deal claims (can violate pricing policies)
+    [/best\s+deal/gi, 'great value'],
+    [/lowest\s+price/gi, 'competitive price'],
+    [/\bcheapest\b/gi, 'affordable'],
+
+    // Superlatives that can't be verified
+    [/\bbest\s+quality\b/gi, 'quality'],
+    [/highest\s+quality/gi, 'premium quality'],
+    [/perfect\s+condition/gi, 'excellent condition'],
+
+    // Clean up extra spaces
+    [/\s{2,}/g, ' '],
+    [/^\s+|\s+$/g, '']
+  ];
+
+  let filteredText = text;
+  let changesDetected = false;
+
+  for (const [pattern, replacement] of prohibitedPhrases) {
+    const original = filteredText;
+    filteredText = filteredText.replace(pattern, replacement);
+
+    if (original !== filteredText) {
+      changesDetected = true;
+      console.log(`⚠️ Filtered prohibited phrase: "${pattern.source}" → "${replacement}"`);
+    }
+  }
+
+  // Log if we made changes
+  if (changesDetected) {
+    console.log(`✅ Filtered eBay prohibited words from text`);
+  }
+
+  return filteredText.trim();
+}
+
 export async function generateListingContent(
-  data: GenerateContent, 
+  data: GenerateContent,
   customizationSettings?: CustomizationSettings
 ): Promise<{
   title: string;
@@ -714,7 +776,15 @@ CRITICAL RULES:
 6. NO HTML tags - plain text only
 7. Create 4-6 sentences with logical flow
 8. Include technical specifications when possible
-9. End with confidence-building statement
+9. End with simple closing statement about quality or suitability
+
+PROHIBITED eBay WORDS (NEVER USE):
+❌ "guarantee" / "guaranteed" (eBay provides buyer protection)
+❌ "satisfaction guarantee" / "money back guarantee"
+❌ "warranty" (unless manufacturer's warranty)
+❌ "authentic" / "100% original" (implies others aren't)
+❌ "risk-free" / "no risk"
+❌ Use ONLY factual statements about the product itself
 
 Please respond with JSON:
 {
@@ -727,7 +797,7 @@ Please respond with JSON:
       messages: [
         {
           role: "system",
-          content: "You are an eBay SEO specialist and professional copywriter with expertise in marketplace optimization. Always respond with valid JSON containing title and description fields. CRITICAL: Title must be EXACTLY under 80 characters, description under 600 characters. Create detailed, professional descriptions that include specifications, features, use cases, and value propositions. Use only plain text (no HTML). Focus on search terms buyers actually use, avoid keyword stuffing, and never use prohibited eBay language like 'like new' or unverifiable superlatives."
+          content: "You are an eBay SEO specialist and professional copywriter with expertise in marketplace optimization. Always respond with valid JSON containing title and description fields. CRITICAL: Title must be EXACTLY under 80 characters, description under 600 characters. Create detailed, professional descriptions that include specifications, features, use cases, and value propositions. Use only plain text (no HTML). Focus on search terms buyers actually use, avoid keyword stuffing. NEVER USE PROHIBITED EBAY WORDS: guarantee, guaranteed, satisfaction guarantee, money back guarantee, warranty (unless manufacturer's), authentic, 100% original, risk-free, best deal, lowest price. Use ONLY factual product statements."
         },
         {
           role: "user",
@@ -740,7 +810,7 @@ Please respond with JSON:
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
-    
+
     // Validate and ensure title length compliance
     if (!result.title || !result.description) {
       throw new Error("AI response missing required fields");
@@ -756,6 +826,10 @@ Please respond with JSON:
       .replace(/<[^>]*>/g, '') // Remove any HTML tags
       .replace(/\n\n+/g, '\n') // Replace multiple newlines with single
       .trim();
+
+    // CRITICAL: Filter prohibited eBay words
+    result.title = filterEbayProhibitedWords(result.title);
+    result.description = filterEbayProhibitedWords(result.description);
 
     return {
       title: result.title,
@@ -909,10 +983,10 @@ JSON Structure:
       "order": 4
     },
     {
-      "id": "brand-promise",
+      "id": "value-proposition",
       "type": "highlight",
-      "title": "Our Promise to You",
-      "content": "Brand promise paragraph incorporating trust elements and call to action",
+      "title": "Why Choose This Product",
+      "content": "Value proposition paragraph about quality, features, and suitability (NO guarantees, warranties, or unverifiable claims)",
       "order": 5
     }
   ],
@@ -922,6 +996,14 @@ JSON Structure:
 
 Make the content authentic to the brand, engaging for the target audience, and optimized for eBay search.
 ${brandSettings?.sellingPoints?.length > 0 ? `Emphasize these selling points: ${brandSettings.sellingPoints.join(', ')}` : ''}
+
+CRITICAL - eBay PROHIBITED WORDS (NEVER USE):
+❌ "guarantee" / "guaranteed" / "satisfaction guarantee"
+❌ "money back guarantee" / "risk-free" / "no risk"
+❌ "warranty" (unless manufacturer's warranty)
+❌ "authentic" / "100% original"
+❌ "best deal" / "lowest price"
+Use ONLY factual statements about the product's features, quality, and suitability.
 `;
 
     const completion = await openai.chat.completions.create({
@@ -929,7 +1011,7 @@ ${brandSettings?.sellingPoints?.length > 0 ? `Emphasize these selling points: ${
       messages: [
         {
           role: "system",
-          content: `You are a specialized eBay listing copywriter who creates brand-aligned, high-converting product descriptions. You understand different brand voices (${voice}), tones (${tone}), and styles (${style}). Always respond with valid JSON only.`
+          content: `You are a specialized eBay listing copywriter who creates brand-aligned, high-converting product descriptions. You understand different brand voices (${voice}), tones (${tone}), and styles (${style}). Always respond with valid JSON only. CRITICAL: NEVER use prohibited eBay words like guarantee, guaranteed, satisfaction guarantee, warranty (unless manufacturer's), authentic, risk-free, best deal. Use ONLY factual product statements.`
         },
         {
           role: "user",
@@ -950,8 +1032,14 @@ ${brandSettings?.sellingPoints?.length > 0 ? `Emphasize these selling points: ${
     
     // Ensure all required fields are present
     const structuredDescription: StructuredDescription = {
-      title: parsedDescription.title || productData.productName,
-      sections: parsedDescription.sections || [],
+      title: filterEbayProhibitedWords(parsedDescription.title || productData.productName),
+      sections: (parsedDescription.sections || []).map((section: any) => ({
+        ...section,
+        title: filterEbayProhibitedWords(section.title),
+        content: Array.isArray(section.content)
+          ? section.content.map((item: string) => filterEbayProhibitedWords(item))
+          : filterEbayProhibitedWords(section.content)
+      })),
       keywords: parsedDescription.keywords || brandSettings?.keywords || [],
       brandTone: parsedDescription.brandTone || tone
     };

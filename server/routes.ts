@@ -37,17 +37,32 @@ declare module "express-session" {
   }
 }
 
+// Helper function to check if file is a valid image (including HEIC/HEIF from iPhone)
+const isValidImageFile = (mimetype: string, originalname: string): boolean => {
+  // Standard image types
+  if (mimetype.startsWith('image/')) return true;
+  
+  // HEIC/HEIF types (iPhone RAW images)
+  const heicTypes = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
+  if (heicTypes.includes(mimetype.toLowerCase())) return true;
+  
+  // Check file extension as fallback (some browsers don't set correct MIME type for HEIC)
+  const extension = originalname.split('.').pop()?.toLowerCase();
+  const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'bmp', 'tiff'];
+  return validExtensions.includes(extension || '');
+};
+
 // Configure multer for image uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 20 * 1024 * 1024, // 20MB limit (HEIC files can be larger)
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (isValidImageFile(file.mimetype, file.originalname)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Only image files are allowed (JPG, PNG, GIF, WebP, HEIC)'));
     }
   },
 });
@@ -530,13 +545,13 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(400).json({ message: "Maximum 12 images allowed per listing" });
       }
 
-      // Validate file sizes and types
+      // Validate file sizes and types (HEIC already converted on client)
       for (const file of req.files) {
-        if (!file.mimetype.startsWith('image/')) {
-          return res.status(400).json({ message: "Only image files are allowed" });
+        if (!isValidImageFile(file.mimetype, file.originalname)) {
+          return res.status(400).json({ message: "Only image files are allowed (JPG, PNG, GIF, WebP, HEIC)" });
         }
-        if (file.size > 5 * 1024 * 1024) {
-          return res.status(400).json({ message: "Image files must be under 5MB each" });
+        if (file.size > 20 * 1024 * 1024) {
+          return res.status(400).json({ message: "Image files must be under 20MB each" });
         }
       }
 
@@ -578,13 +593,13 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(400).json({ message: "Maximum 12 images allowed per listing" });
       }
 
-      // Validate file sizes and types
+      // Validate file sizes and types (HEIC already converted on client)
       for (const file of req.files) {
-        if (!file.mimetype.startsWith('image/')) {
-          return res.status(400).json({ message: "Only image files are allowed" });
+        if (!isValidImageFile(file.mimetype, file.originalname)) {
+          return res.status(400).json({ message: "Only image files are allowed (JPG, PNG, GIF, WebP, HEIC)" });
         }
-        if (file.size > 5 * 1024 * 1024) {
-          return res.status(400).json({ message: "Image files must be under 5MB each" });
+        if (file.size > 20 * 1024 * 1024) {
+          return res.status(400).json({ message: "Image files must be under 20MB each" });
         }
       }
 
@@ -649,13 +664,13 @@ export async function registerRoutes(app: express.Express): Promise<Server> {
         return res.status(400).json({ message: "No image file provided" });
       }
 
-      // Validate file
-      if (!req.file.mimetype.startsWith('image/')) {
-        return res.status(400).json({ message: "Only image files are allowed" });
+      // Validate file (HEIC already converted on client, but validate anyway)
+      if (!isValidImageFile(req.file.mimetype, req.file.originalname)) {
+        return res.status(400).json({ message: "Only image files are allowed (JPG, PNG, GIF, WebP, HEIC)" });
       }
 
-      if (req.file.size > 5 * 1024 * 1024) {
-        return res.status(400).json({ message: "Image must be under 5MB" });
+      if (req.file.size > 20 * 1024 * 1024) {
+        return res.status(400).json({ message: "Image must be under 20MB" });
       }
 
       // Check Cloudinary configuration before attempting upload

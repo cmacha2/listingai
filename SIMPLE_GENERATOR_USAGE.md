@@ -149,3 +149,5 @@ Tu generador simple de listings está completamente funcional con AI profesional
 **URL de acceso**: `http://localhost:3021/simple-generator`
 **Password**: `smartsavedepot`
 
+
+

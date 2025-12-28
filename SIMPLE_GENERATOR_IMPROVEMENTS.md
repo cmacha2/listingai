@@ -203,3 +203,5 @@ Ahora tienes un generador de listings que produce contenido de CALIDAD PROFESION
 idéntico en formato y estructura al ejemplo que proporcionaste, pero completamente 
 personalizado para cada producto basado en el análisis AI de las imágenes.
 
+
+

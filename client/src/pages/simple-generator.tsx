@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Upload, Eye, EyeOff, Copy, CheckCircle, RefreshCw } from "lucide-react";
+import { Loader2, Upload, Eye, Copy, CheckCircle } from "lucide-react";
 
 export default function SimpleGenerator() {
   const [password, setPassword] = useState("");
@@ -35,42 +35,31 @@ export default function SimpleGenerator() {
     if (result) {
       setEditableTitle(result.title || "");
       setEditableDescription(result.description || "");
-      setShowPreview(true); // Auto-show preview when result is ready
     }
   }, [result]);
 
-  // Memoized HTML regeneration - updates automatically when title/description change
-  const currentHTML = useMemo(() => {
-    if (!result?.htmlTemplate) return "";
+  // Function to regenerate HTML with edited content
+  const regenerateHTML = () => {
+    if (!result?.htmlTemplate) return result?.htmlTemplate || "";
     
+    // Replace title and description in the HTML template
     let updatedHTML = result.htmlTemplate;
     
-    // Replace title - look for <h1> tag in the template (handles various styles)
+    // Replace title - look for <h1> tag in the template
     updatedHTML = updatedHTML.replace(
-      /<h1[^>]*>[\s\S]*?<\/h1>/i,
+      /<h1[^>]*>.*?<\/h1>/,
       `<h1 style="color: #000; font-size: 24px; font-weight: bold; margin-bottom: 15px;">${editableTitle}</h1>`
     );
     
-    // Replace description - more flexible regex to match description paragraphs
-    // First try to find the main description paragraph
-    const descPatterns = [
-      /<p[^>]*style="[^"]*line-height[^"]*"[^>]*>[\s\S]*?<\/p>/i,
-      /<div[^>]*class="[^"]*description[^"]*"[^>]*>[\s\S]*?<\/div>/i,
-      /<p[^>]*>[\s\S]{50,}?<\/p>/i // Fallback: first long paragraph
-    ];
-    
-    for (const pattern of descPatterns) {
-      if (pattern.test(updatedHTML)) {
-        updatedHTML = updatedHTML.replace(
-          pattern,
-          `<p style="line-height: 1.8; color: #333; margin-bottom: 20px; white-space: pre-wrap;">${editableDescription}</p>`
-        );
-        break;
-      }
-    }
+    // Replace description - look for the description paragraph
+    const descRegex = /<p style="line-height: 1\.8; color: #333; margin-bottom: 20px;">[\s\S]*?<\/p>/;
+    updatedHTML = updatedHTML.replace(
+      descRegex,
+      `<p style="line-height: 1.8; color: #333; margin-bottom: 20px;">${editableDescription}</p>`
+    );
     
     return updatedHTML;
-  }, [result?.htmlTemplate, editableTitle, editableDescription]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,6 +90,12 @@ export default function SimpleGenerator() {
         body: formData,
       });
 
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server error: Please try again later");
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -109,15 +104,25 @@ export default function SimpleGenerator() {
 
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      if (err instanceof Error) {
+        // Handle network or parsing errors
+        if (err.message.includes("Unexpected token")) {
+          setError("Server temporarily unavailable. Please try again.");
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError("An error occurred");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const copyToClipboard = () => {
-    if (currentHTML) {
-      navigator.clipboard.writeText(currentHTML);
+    const htmlToCopy = regenerateHTML();
+    if (htmlToCopy) {
+      navigator.clipboard.writeText(htmlToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -253,17 +258,8 @@ export default function SimpleGenerator() {
                       variant="outline"
                       className="flex-1"
                     >
-                      {showPreview ? (
-                        <>
-                          <EyeOff className="mr-2 h-4 w-4" />
-                          Hide Preview
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Show Preview
-                        </>
-                      )}
+                      <Eye className="mr-2 h-4 w-4" />
+                      {showPreview ? "Hide" : "Show"} Preview
                     </Button>
                     <Button
                       onClick={copyToClipboard}
@@ -284,19 +280,13 @@ export default function SimpleGenerator() {
                   </div>
 
                   {showPreview && (
-                    <div className="border rounded-lg p-4 bg-white shadow-inner">
-                      <div className="flex items-center justify-between mb-4">
-                        <Label className="text-lg font-semibold flex items-center gap-2">
-                          <RefreshCw className="h-4 w-4 text-green-500" />
-                          Live Preview
-                          <span className="text-xs font-normal text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                            Auto-updates
-                          </span>
-                        </Label>
-                      </div>
+                    <div className="border rounded-lg p-4 bg-white">
+                      <Label className="text-lg font-semibold mb-4 block">
+                        HTML Preview
+                      </Label>
                       <div
-                        className="border rounded overflow-auto max-h-[600px] bg-white transition-all duration-200"
-                        dangerouslySetInnerHTML={{ __html: currentHTML }}
+                        className="border rounded overflow-auto max-h-[600px]"
+                        dangerouslySetInnerHTML={{ __html: regenerateHTML() }}
                       />
                     </div>
                   )}

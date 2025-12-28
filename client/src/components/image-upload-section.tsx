@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, ImageIcon, X, Plus, Sparkles, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import heic2any from "heic2any";
 
 interface ImageFile {
   file: File;
@@ -23,48 +22,6 @@ interface ImageUploadSectionProps {
   isAIAutofilled: boolean;
 }
 
-// Helper function to check if file is HEIC/HEIF
-const isHeicFile = (file: File): boolean => {
-  const heicTypes = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
-  if (heicTypes.includes(file.type.toLowerCase())) return true;
-  
-  // Also check file extension (some browsers don't set correct MIME type)
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  return extension === 'heic' || extension === 'heif';
-};
-
-// Helper function to convert HEIC to JPEG
-const convertHeicToJpeg = async (file: File): Promise<File> => {
-  try {
-    const blob = await heic2any({
-      blob: file,
-      toType: 'image/jpeg',
-      quality: 0.9,
-    });
-    
-    // heic2any can return a single blob or an array
-    const resultBlob = Array.isArray(blob) ? blob[0] : blob;
-    
-    // Create new file with .jpg extension
-    const newFileName = file.name.replace(/\.(heic|heif)$/i, '.jpg');
-    return new File([resultBlob], newFileName, { type: 'image/jpeg' });
-  } catch (error) {
-    console.error('HEIC conversion error:', error);
-    throw new Error(`Failed to convert ${file.name} from HEIC format`);
-  }
-};
-
-// Check if file is a valid image (including HEIC)
-const isValidImageFile = (file: File): boolean => {
-  if (file.type.startsWith('image/')) return true;
-  if (isHeicFile(file)) return true;
-  
-  // Check common image extensions
-  const extension = file.name.split('.').pop()?.toLowerCase();
-  const validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'bmp', 'tiff'];
-  return validExtensions.includes(extension || '');
-};
-
 export default function ImageUploadSection({
   imageFiles,
   setImageFiles,
@@ -74,7 +31,6 @@ export default function ImageUploadSection({
 }: ImageUploadSectionProps) {
   const { toast } = useToast();
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
 
   // Mutation for uploading images to Cloudinary
   const uploadImageMutation = useMutation({
@@ -104,32 +60,29 @@ export default function ImageUploadSection({
     },
   });
 
-  const handleFileChange = async (files: FileList | null) => {
+  const handleFileChange = (files: FileList | null) => {
     if (!files) return;
 
-    const filesToProcess: File[] = [];
+    const validFiles: File[] = [];
     const errors: string[] = [];
 
-    // First pass: validate files
     Array.from(files).forEach((file) => {
-      if (!isValidImageFile(file)) {
+      if (!file.type.startsWith('image/')) {
         errors.push(`${file.name}: Only image files are allowed`);
         return;
       }
 
-      // HEIC files can be larger, allow up to 20MB for them
-      const maxSize = isHeicFile(file) ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        errors.push(`${file.name}: File size must be under ${isHeicFile(file) ? '20MB' : '5MB'}`);
+      if (file.size > 5 * 1024 * 1024) {
+        errors.push(`${file.name}: File size must be under 5MB`);
         return;
       }
 
-      if (filesToProcess.length + imageFiles.length >= 12) {
+      if (validFiles.length + imageFiles.length >= 12) {
         errors.push(`Maximum 12 images allowed per listing`);
         return;
       }
 
-      filesToProcess.push(file);
+      validFiles.push(file);
     });
 
     if (errors.length > 0) {
@@ -139,40 +92,6 @@ export default function ImageUploadSection({
         variant: "destructive",
       });
     }
-
-    if (filesToProcess.length === 0) return;
-
-    // Check if any files need HEIC conversion
-    const hasHeicFiles = filesToProcess.some(isHeicFile);
-    if (hasHeicFiles) {
-      setIsConverting(true);
-      toast({
-        title: "Converting iPhone Images",
-        description: "Converting HEIC images to JPEG format...",
-      });
-    }
-
-    // Convert HEIC files and collect all valid files
-    const validFiles: File[] = [];
-    for (const file of filesToProcess) {
-      try {
-        if (isHeicFile(file)) {
-          const convertedFile = await convertHeicToJpeg(file);
-          validFiles.push(convertedFile);
-        } else {
-          validFiles.push(file);
-        }
-      } catch (error) {
-        errors.push(`${file.name}: Failed to convert HEIC image`);
-        toast({
-          title: "Conversion Failed",
-          description: `Could not convert ${file.name}. Try a different image.`,
-          variant: "destructive",
-        });
-      }
-    }
-
-    setIsConverting(false);
 
     if (validFiles.length > 0) {
       const newImageFiles = validFiles.map((file) => ({
@@ -274,16 +193,16 @@ export default function ImageUploadSection({
       >
         <input
           type="file"
-          accept="image/*,.heic,.heif"
+          accept="image/*"
           multiple
           onChange={handleImageUpload}
           className="hidden"
           id="images-upload"
-          disabled={imageFiles.length >= 12 || isConverting}
+          disabled={imageFiles.length >= 12}
         />
         <label 
           htmlFor="images-upload" 
-          className={`cursor-pointer ${imageFiles.length >= 12 || isConverting ? 'cursor-not-allowed opacity-50' : ''}`}
+          className={`cursor-pointer ${imageFiles.length >= 12 ? 'cursor-not-allowed opacity-50' : ''}`}
         >
           {imageFiles.length >= 12 ? (
             <>
@@ -291,18 +210,12 @@ export default function ImageUploadSection({
               <p className="text-gray-500 font-medium">Maximum images reached</p>
               <p className="text-gray-400 text-sm">12/12 images uploaded</p>
             </>
-          ) : isConverting ? (
-            <>
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-gray-600 font-medium">Converting iPhone Images...</p>
-              <p className="text-gray-500 text-sm">Please wait while we convert HEIC to JPEG</p>
-            </>
           ) : (
             <>
               <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
               <p className="text-gray-600 font-medium">Upload Product Images</p>
               <p className="text-gray-500 text-sm">Click to upload or drag and drop multiple images</p>
-              <p className="text-gray-400 text-xs mt-1">📱 iPhone HEIC images supported • AI will analyze all images</p>
+              <p className="text-gray-400 text-xs mt-1">AI will analyze all images for better accuracy</p>
             </>
           )}
         </label>
